@@ -8,7 +8,7 @@ set destination_folder "/home/ubuntu/src"
 set password $env(RASP_PASSWORD) ;
 
 # Run rsync command with password provided automatically
-spawn rsync -avz --progress $source_folder $destination_user@$destination_host:$destination_folder
+spawn rsync -avz --force --progress $source_folder $destination_user@$destination_host:$destination_folder
 
 # Expect password prompt
 expect "password:"
