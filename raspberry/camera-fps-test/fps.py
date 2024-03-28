@@ -30,6 +30,7 @@ if __name__ == "__main__":
         print("Failed to start camera")
     n_frames = 0
     start_time = time.time()
+    n = 10
     while True:
         n_frames += 1
         frame = cam.requestFrame(200)
@@ -40,12 +41,16 @@ if __name__ == "__main__":
             amplitude_buf*=(255/1024)
             amplitude_buf = np.clip(amplitude_buf, 0, 255)
         if n_frames == 1000:
+            n-=1
+            elapsed_time = time.time() - start_time
+            start_time = time.time()
+            print("Elapsed time: ", elapsed_time, " seconds")
+            print("fps:", n_frames / elapsed_time)
+            n_frames = 0
+        if n == 0:
             break
 
 
-    elapsed_time = time.time() - start_time
-    print("Elapsed time: ", elapsed_time, " seconds")
-    print("fps:", n_frames / elapsed_time)
     cam.stop()
     cam.close()
     sys.exit(0)
