@@ -23,7 +23,7 @@
     <xacro:property name="stick_radius" value="0.015"/>
     <xacro:property name="stick_mass" value="0.015"/>
     <!-- Stick length can't be automatically calculated -->
-    <xacro:property name="stick_length" value="0.2655" />
+    <xacro:property name="stick_length" value="0.2654" />
 
 
     <!-- define colors -->
@@ -186,8 +186,8 @@
     <!-- Ball joints -->
     <xacro:static_joint name="stick-front-base" parent="base_link" child="stick-front" xyz="${chassis_length/2 - stick_offset} 0 ${-stick_length/2}" rpy="0 0 0" />
     <xacro:static_joint name="stick-back-base" parent="base_link" child="stick-back" xyz="${-(chassis_length/2 - stick_offset)} 0 ${-stick_length/2}" rpy="0 0 0" />
-    <xacro:sphere_joint name="ball-front-joint" parent="stick-front" child="ball-front" xyz="0 0 ${-stick_length/2}" />
-    <xacro:sphere_joint name="ball-back-joint" parent="stick-back" child="ball-back" xyz="0 0 ${-stick_length/2}" />
+    <xacro:sphere_joint name="ball-front-joint" parent="base_link" child="ball-front" xyz="${chassis_length/2 - stick_offset} 0 ${-chassis_depth/2 - wheel_radius + ball_radius}" />
+    <xacro:sphere_joint name="ball-back-joint" parent="base_link" child="ball-back" xyz="{-(chassis_length/2 - stick_offset)} 0 ${-chassis_depth/2 - wheel_radius + ball_radius}" />
     
 
 </robot>
