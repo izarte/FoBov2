@@ -95,16 +95,16 @@ class FoBo2Env(gym.Env):
         return observation, info
     
     def step(self, action):
+        p.stepSimulation(physicsClientId = self._client)
         self._human_walk()
         self._move_robot(action)
+        observation = self._get_observation()
 
-        p.stepSimulation(physicsClientId = self._client)
-        p.performCollisionDetection(physicsClientId = self._client)
-        contact_points = p.getContactPoints(physicsClientId = self._client, bodyA = self._robot_id)
+        # p.performCollisionDetection(physicsClientId = self._client)
+        # contact_points = p.getContactPoints(physicsClientId = self._client, bodyA = self._robot_id)
 
         reward = self._compute_reward()
         terminated, truncated = self._get_end_episode()
-        observation = self._get_observation()
         info = self._get_info()
 
         return observation, reward, terminated, truncated, info
@@ -119,7 +119,6 @@ class FoBo2Env(gym.Env):
     # TODO give robot wheels speed with action given, maybe camera should move here
     def _move_robot(self, action):
         # Set action speed in both wheels
-        # Left wheel
         self.robot.move(action=action)
 
         return 
@@ -134,6 +133,7 @@ class FoBo2Env(gym.Env):
 
     # TODO read robot observations, speeds, images
     def _get_observation(self):
+        rgb, depth = self.robot.get_images()
         return {"wheels-speed": 0, "human-pixel": [0, 0], "depth-image": 0}
 
     # TODO get current environment information

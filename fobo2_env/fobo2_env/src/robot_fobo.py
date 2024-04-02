@@ -41,37 +41,66 @@ class Robot():
         def get_image(self):
             view_matrix = p.computeViewMatrixFromYawPitchRoll(
                 physicsClientId = self.client_id,
-                cameraTargetPosition=self.current_pos,
+                cameraTargetPosition = self.current_pos,
                 distance = 0.25,
-                roll = self.current_orientatio["roll"],
-                pitch = self.current_orientatio["pitch"],
-                yaw = self.current_orientatio["yaw"],
+                roll = self.current_orientation["roll"],
+                pitch = self.current_orientation["pitch"],
+                yaw = self.current_orientation["yaw"],
                 upAxisIndex = 2
             )
             projection_matrix = p.computeProjectionMatrixFOV(
                 physicsClientId = self.client_id,
                 fov = self.params["fov"],
                 aspect = self.params["aspect"],
-                near = self.params["near"],
-                far = self.params["far"]
+                nearVal = self.params["near"],
+                farVal = self.params["far"]
             )
-            images = p.getCameraImage(
-                physicsClientId = self.client_id,
-                width = self.params["width"],
-                height = self.params["height"],
-                view_matrix = view_matrix,
-                projection_matrix = projection_matrix,
-                shadow=True,
-                renderer=p.ER_BULLET_HARDWARE_OPENGL,
-                flags=p.ER_NO_SEGMENTATION_MASK
-            )
+            # images = p.getCameraImage(
+            #     physicsClientId = self.client_id,
+            #     width = self.params["width"],
+            #     height = self.params["height"],
+            #     viewMatrix = view_matrix,
+            #     projectionMatrix = projection_matrix,
+            #     shadow=True,
+            #     renderer=p.ER_BULLET_HARDWARE_OPENGL,
+            #     flags=p.ER_NO_SEGMENTATION_MASK
+            # )
+            # if self.mode == 'rgb':
+            #     image = np.reshape(images[2], (self.params["height"], self.params["width"], 4)) * 1. / 255.
+            # elif self.mode == 'depth':
+            #     depth_buffer_opengl = np.reshape(images[3], [self.params["width"], self.params["height"]])
+            #     far = self.params["far"]
+            #     near = self.params["near"]
+            #     image = far * near / (far - (far - near) * depth_buffer_opengl)
+
             if self.mode == 'rgb':
-                image = np.reshape(images[2], (self.params["height"], self.params["width"], 4)) * 1. / 255.
+                _, _, rgb, _, _ = p.getCameraImage(
+                    physicsClientId = self.client_id,
+                    width = self.params["width"],
+                    height = self.params["height"],
+                    viewMatrix = view_matrix,
+                    projectionMatrix = projection_matrix,
+                    shadow=True,
+                    renderer=p.ER_BULLET_HARDWARE_OPENGL,
+                    flags=p.ER_NO_SEGMENTATION_MASK
+                )
+                image = np.reshape(rgb, (self.params["height"], self.params["width"], 4)) * 1. / 255.
             elif self.mode == 'depth':
-                depth_buffer_opengl = np.reshape(images[3], [self.params["width"], self.params["height"]])
+                _, _, _, depth, _ = p.getCameraImage(
+                    physicsClientId = self.client_id,
+                    width = self.params["width"],
+                    height = self.params["height"],
+                    viewMatrix = view_matrix,
+                    projectionMatrix = projection_matrix,
+                    shadow=True,
+                    renderer=p.ER_BULLET_HARDWARE_OPENGL,
+                    flags=p.ER_NO_SEGMENTATION_MASK
+                )
+                depth_buffer_opengl = np.reshape(depth, [self.params["width"], self.params["height"]])
                 far = self.params["far"]
                 near = self.params["near"]
                 image = far * near / (far - (far - near) * depth_buffer_opengl)
+
             return image
         
         # TODO add noise function to image
@@ -96,7 +125,7 @@ class Robot():
                 position : np.array,
                 yaw : float
             ):
-            r_pos = (position)
+            r_pos = np.copy(position)
             yaw = np.radians(yaw)
             r_pos[0] = -np.sin(yaw) * position[0]
             r_pos[1] = np.cos(yaw) * position[0]
@@ -145,6 +174,7 @@ class Robot():
 
     def reset(self):
         robot_start_pos, robot_start_orientation = random_pos_orientation()
+
         self.robot_id = p.loadURDF(
             physicsClientId = self.client_id,
             fileName = os.path.dirname(__file__) + "/models/fobo2.urdf", 
@@ -175,9 +205,9 @@ class Robot():
         )
         robot_pose, robot_orientation = p.getBasePositionAndOrientation(
             physicsClientId = self.client_id,
-            bodyUniqueId=self.robot_id
+            bodyUniqueId = self.robot_id
             )
-        roll, pitch, yaw = self.orientation_in_grad(robot_orientation)
+        roll, pitch, yaw = self.orientation_in_grad(p.getEulerFromQuaternion(quaternion=robot_orientation))
 
         # Calculate camera positions
         self.depth_camera.move(
@@ -186,6 +216,7 @@ class Robot():
             pitch = pitch,
             yaw = yaw
         )
+
         self.rgb_camera.move(
             robot_position = np.array(robot_pose),
             roll = roll,
