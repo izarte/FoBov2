@@ -4,7 +4,7 @@ import numpy as np
 import pybullet as p
 import pybullet_data
 
-from fobo2_env.src.utils import random_pos_orientation
+from fobo2_env.src.utils import random_pos_orientation, distance_in_range
 from fobo2_env.src.robot_fobo import Robot
 class FoBo2Env(gym.Env):
     metadata = {'render_modes': ['DIRECT', 'GUI'], 'render_fps': 60}  
@@ -14,7 +14,7 @@ class FoBo2Env(gym.Env):
         self.observation_space = spaces.Dict(
             {
                 "wheels-speed": spaces.Box(low=np.array([-100, -100]), high=np.array([100, 100]), dtype=np.float32),
-                "human-pixel": spaces.Box(low=np.array([0, 0]), high=np.array([rgb_width-1, rgb_height-1]), dtype=np.float32),
+                "human-pixel": spaces.Box(low=0, high=255, shape=(rgb_width, rgb_height, 3), dtype=np.uint8),
                 "depth-image": spaces.Box(low=0, high=255, shape=(depth_width, depth_height, 1), dtype=np.uint8)
                 # "desired-distance": spaces.Box(low=-0.1, high=4, shape=(1,),  dtype=float),
             }
@@ -27,15 +27,15 @@ class FoBo2Env(gym.Env):
         self.rgb_width = rgb_width
         self.rgb_height = rgb_height
 
-
-
         self.depth_camera_realtive_position = [0.1, 0, 0.5]
         self.rgb_camera_realtive_position = [-0.1, 0, 0.5]
+        self.desired_distance = 1.5
+        self.offset = 0.5
 
         if render_mode == "DIRECT":
-            self._client = p.connect(p.DIRECT)
+            self._client_id = p.connect(p.DIRECT)
         elif render_mode == "GUI":
-            self._client = p.connect(p.GUI)
+            self._client_id = p.connect(p.GUI)
         
 
         # Create variable placeholders for pybullet objects
@@ -46,21 +46,20 @@ class FoBo2Env(gym.Env):
     def reset(self, seed=None, options=None):
         super().reset(seed=seed)
         # Reset simulation
-        p.resetSimulation(self._client)
+        p.resetSimulation(self._client_id)
         p.setAdditionalSearchPath(pybullet_data.getDataPath()) 
-        p.setGravity(0, 0, -9.81, self._client)
+        p.setGravity(0, 0, -9.81, self._client_id)
 
         self._planeId = p.loadURDF(
-            physicsClientId = self._client,
+            physicsClientId = self._client_id,
             fileName="plane.urdf", 
             useFixedBase = True
         )
 
         human_start_pos, human_start_orientation = random_pos_orientation()
-        robot_start_pos, robot_start_orientation = random_pos_orientation()
 
         self._human_id = p.loadURDF(
-            physicsClientId = self._client,
+            physicsClientId = self._client_id,
             fileName="urdf/human.urdf", 
             basePosition = [1, 0, 1],
             baseOrientation = human_start_orientation,
@@ -68,13 +67,13 @@ class FoBo2Env(gym.Env):
         )
 
         # Remove default pybullet mass in human 
-        for i in range(p.getNumJoints(physicsClientId = self._client, bodyUniqueId = self._human_id )):
+        for i in range(p.getNumJoints(physicsClientId = self._client_id, bodyUniqueId = self._human_id )):
             if i < 32:
-                p.changeDynamics(physicsClientId = self._client, bodyUniqueId = self._human_id, linkIndex = i, mass = 0)
-        p.changeDynamics(physicsClientId = self._client, bodyUniqueId = self._human_id, linkIndex = -1, mass = 0)
+                p.changeDynamics(physicsClientId = self._client_id, bodyUniqueId = self._human_id, linkIndex = i, mass = 0)
+        p.changeDynamics(physicsClientId = self._client_id, bodyUniqueId = self._human_id, linkIndex = -1, mass = 0)
 
         self.robot = Robot(
-            client_id = self._client,
+            client_id = self._client_id,
             depth_width = self.depth_width,
             depth_height = self.depth_height,
             rgb_width = self.rgb_width,
@@ -82,7 +81,7 @@ class FoBo2Env(gym.Env):
         )
         self._robot_id = self.robot.reset()
         # self.robot_id = p.loadURDF(
-        #     physicsClientId = self._client,
+        #     physicsClientId = self._client_id,
         #     fileName="urdf/fobo2.urdf", 
         #     basePosition = robot_start_pos,
         #     baseOrientation = robot_start_orientation,
@@ -95,22 +94,22 @@ class FoBo2Env(gym.Env):
         return observation, info
     
     def step(self, action):
-        p.stepSimulation(physicsClientId = self._client)
+        p.stepSimulation(physicsClientId = self._client_id)
         self._human_walk()
         self._move_robot(action)
         observation = self._get_observation()
 
-        # p.performCollisionDetection(physicsClientId = self._client)
-        # contact_points = p.getContactPoints(physicsClientId = self._client, bodyA = self._robot_id)
+        # p.performCollisionDetection(physicsClientId = self._client_id)
+        # contact_points = p.getContactPoints(physicsClientId = self._client_id, bodyA = self._robot_id)
 
-        reward = self._compute_reward()
+        reward = self._compute_reward(observation)
         terminated, truncated = self._get_end_episode()
         info = self._get_info()
 
         return observation, reward, terminated, truncated, info
 
     def close(self):
-        p.disconnect(self._client) 
+        p.disconnect(self._client_id) 
 
     # TODO human walking movement and animation 
     def _human_walk(self):
@@ -124,17 +123,44 @@ class FoBo2Env(gym.Env):
         return 
 
     # TODO calculate reward in this moment, should be based on robot-human distance
-    def _compute_reward(self):
-        return
+    def _compute_reward(self, observation):
+        robot_pose, _ =  p.getBasePositionAndOrientation(
+            physicsClientId = self._client_id,
+            bodyUniqueId = self._robot_id
+            )
+        human_pose, _ =  p.getBasePositionAndOrientation(
+            physicsClientId = self._client_id,
+            bodyUniqueId = self._human_id
+            )
+        distance = np.sqrt(
+            np.sum(
+                (np.array([robot_pose[0], robot_pose[1]]) - 
+                 np.array([human_pose[0], human_pose[1]]))**2
+            )
+        )
+        reward = 0.0
+        if distance_in_range(distance=distance, desired_distance=self.desired_distance, offset=self.offset):
+            reward += 1.
+        
+        if observation["human-pixel"][0] >= 0:
+            reward += 1.
+
+        return reward
     
     # TODO check if episode es terminated, human reached target point, or truncated if any collision has been detected
     def _get_end_episode(self):
-        return 0, 0
+        return False, False
 
     # TODO read robot observations, speeds, images
     def _get_observation(self):
+        observations = {"wheels-speed": 0, "human-pixel": [0, 0], "depth-image": 0}
         rgb, depth = self.robot.get_images()
-        return {"wheels-speed": 0, "human-pixel": [0, 0], "depth-image": 0}
+        x, y = self.robot.get_human_coordinates(rgb)
+        observations["depth-image"] = depth
+        observations["human-pixel"] = np.array([x, y], dtype=np.uint8)
+        speedL, speedR = self.robot.get_motor_speeds()
+        observations["wheels-speed"] = np.array([speedL, speedR], dtype=np.float32)
+        return observations
 
     # TODO get current environment information
     def _get_info(self):

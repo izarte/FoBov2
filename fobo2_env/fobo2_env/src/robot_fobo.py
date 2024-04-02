@@ -85,6 +85,7 @@ class Robot():
                     flags=p.ER_NO_SEGMENTATION_MASK
                 )
                 image = np.reshape(rgb, (self.params["height"], self.params["width"], 4)) * 1. / 255.
+                image = image.astype(np.uint8)
             elif self.mode == 'depth':
                 _, _, _, depth, _ = p.getCameraImage(
                     physicsClientId = self.client_id,
@@ -96,11 +97,11 @@ class Robot():
                     renderer=p.ER_BULLET_HARDWARE_OPENGL,
                     flags=p.ER_NO_SEGMENTATION_MASK
                 )
-                depth_buffer_opengl = np.reshape(depth, [self.params["width"], self.params["height"]])
+                depth_buffer = np.reshape(depth, [self.params["width"], self.params["height"]])
                 far = self.params["far"]
                 near = self.params["near"]
-                image = far * near / (far - (far - near) * depth_buffer_opengl)
-
+                normalized_depth = normalized_depth = (depth_buffer - near) / (far - near) 
+                image = (normalized_depth * 255).astype(np.uint8)
             return image
         
         # TODO add noise function to image
@@ -140,6 +141,8 @@ class Robot():
             rgb_height : int = 128
         ):
 
+        self.right_wheel = 1
+        self.left_wheel = 3
         self.client_id = client_id
         self.depth_width = depth_width
         self.depth_height = depth_height
@@ -191,7 +194,7 @@ class Robot():
         p.setJointMotorControl2(
             physicsClientId = self.client_id,
             bodyIndex=self.robot_id,
-            jointIndex=1,
+            jointIndex=self.left_wheel,
             controlMode=p.VELOCITY_CONTROL,
             targetVelocity=action[0]
         )
@@ -199,7 +202,7 @@ class Robot():
         p.setJointMotorControl2(
             physicsClientId = self.client_id,
             bodyIndex=self.robot_id,
-            jointIndex=3,
+            jointIndex=self.right_wheel,
             controlMode=p.VELOCITY_CONTROL,
             targetVelocity=action[1]
         )
@@ -231,6 +234,23 @@ class Robot():
         noise_rgb = self.rgb_camera.add_noise(rgb_image)
 
         return noise_rgb, noise_depth
+    
+    def get_motor_speeds(self):
+        _ , speedL, _, _ = p.getJointState(
+            physicsClientId = self.client_id,
+            bodyUniqueId=self.robot_id,
+            jointIndex = self.left_wheel
+        )
+        _ , speedR, _, _ = p.getJointState(
+            physicsClientId = self.client_id,
+            bodyUniqueId=self.robot_id,
+            jointIndex = self.right_wheel
+        )
+        return speedL, speedR
+
+
+    def get_human_coordinates(self, rgb):
+        return 0, 0
 
     def orientation_in_grad(self, orientation):
         roll = np.degrees(orientation[0])
