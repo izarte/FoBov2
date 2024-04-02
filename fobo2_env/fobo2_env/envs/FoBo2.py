@@ -2,11 +2,15 @@ import gymnasium as gym
 from gymnasium import spaces
 import numpy as np
 import pybullet as p
+import pybullet_data
 
+from fobo2_env.src.utils import random_pos_orientation
+from fobo2_env.src.robot_fobo import Robot
 class FoBo2Env(gym.Env):
     metadata = {'render_modes': ['DIRECT', 'GUI'], 'render_fps': 60}  
     def __init__(self, render_mode="DIRECT", rgb_width = 320, rgb_height = 320, depth_width = 320, depth_height= 320):
         # Observation space are input variables for system
+
         self.observation_space = spaces.Dict(
             {
                 "wheels-speed": spaces.Box(low=np.array([-100, -100]), high=np.array([100, 100]), dtype=np.float32),
@@ -23,19 +27,7 @@ class FoBo2Env(gym.Env):
         self.rgb_width = rgb_width
         self.rgb_height = rgb_height
 
-        self.depth_camera_params = {
-            "fov": 60,
-            "near": 0.02,
-            "far": 1,
-            "aspect": self.depth_width / self.depth_height
-        }
 
-        self.rgb_camera_params = {
-            "fov": 60,
-            "near": 0.02,
-            "far": 1,
-            "aspect": self.rgb_width / self.rgb_height
-        }
 
         self.depth_camera_realtive_position = [0.1, 0, 0.5]
         self.rgb_camera_realtive_position = [-0.1, 0, 0.5]
@@ -55,9 +47,8 @@ class FoBo2Env(gym.Env):
         super().reset(seed=seed)
         # Reset simulation
         p.resetSimulation(self._client)
+        p.setAdditionalSearchPath(pybullet_data.getDataPath()) 
         p.setGravity(0, 0, -9.81, self._client)
-
-        self._planeId = p.loadURDF("plane.urdf", )
 
         self._planeId = p.loadURDF(
             physicsClientId = self._client,
@@ -65,23 +56,43 @@ class FoBo2Env(gym.Env):
             useFixedBase = True
         )
 
-        human_start_pos, human_start_orientation = self._random_pos_orientation()
-        robot_start_pos, robot_start_orientation = self._random_pos_orientation()
+        human_start_pos, human_start_orientation = random_pos_orientation()
+        robot_start_pos, robot_start_orientation = random_pos_orientation()
 
         self._human_id = p.loadURDF(
             physicsClientId = self._client,
             fileName="urdf/human.urdf", 
-            basePosition = human_start_pos,
+            basePosition = [1, 0, 1],
             baseOrientation = human_start_orientation,
             useFixedBase = False
         )
-        self.robot_id = p.loadURDF(
-            physicsClientId = self._client,
-            fileName="urdf/fobo2.urdf", 
-            basePosition = robot_start_pos,
-            baseOrientation = robot_start_orientation,
-            useFixedBase = False
+
+        # Remove default pybullet mass in human 
+        for i in range(p.getNumJoints(physicsClientId = self._client, bodyUniqueId = self._human_id )):
+            if i < 32:
+                p.changeDynamics(physicsClientId = self._client, bodyUniqueId = self._human_id, linkIndex = i, mass = 0)
+        p.changeDynamics(physicsClientId = self._client, bodyUniqueId = self._human_id, linkIndex = -1, mass = 0)
+
+        self.robot = Robot(
+            client_id = self._client,
+            depth_width = self.depth_width,
+            depth_height = self.depth_height,
+            rgb_width = self.rgb_width,
+            rgb_height = self.rgb_height
         )
+        self._robot_id = self.robot.reset()
+        # self.robot_id = p.loadURDF(
+        #     physicsClientId = self._client,
+        #     fileName="urdf/fobo2.urdf", 
+        #     basePosition = robot_start_pos,
+        #     baseOrientation = robot_start_orientation,
+        #     useFixedBase = False
+        # )
+
+        observation = self._get_observation()
+        info = self._get_info()
+
+        return observation, info
     
     def step(self, action):
         self._human_walk()
@@ -102,32 +113,31 @@ class FoBo2Env(gym.Env):
         p.disconnect(self._client) 
 
     # TODO human walking movement and animation 
-    def _human_walk():
+    def _human_walk(self):
         return
     
     # TODO give robot wheels speed with action given, maybe camera should move here
-    def _move_robot(action):
+    def _move_robot(self, action):
+        # Set action speed in both wheels
+        # Left wheel
+        self.robot.move(action=action)
+
         return 
 
     # TODO calculate reward in this moment, should be based on robot-human distance
-    def _compute_reward():
+    def _compute_reward(self):
         return
     
     # TODO check if episode es terminated, human reached target point, or truncated if any collision has been detected
-    def _get_end_episode():
-        return
+    def _get_end_episode(self):
+        return 0, 0
 
     # TODO read robot observations, speeds, images
-    def _get_observation():
-        return
+    def _get_observation(self):
+        return {"wheels-speed": 0, "human-pixel": [0, 0], "depth-image": 0}
 
     # TODO get current environment information
-    def _get_info():
-        return
+    def _get_info(self):
+        return {}
 
-    # TODO return random position and orientation, maybe between some limits given
-    def _random_pos_orientation():
-        startPos = [0,0,1.1]
-        startOrientation = p.getQuaternionFromEuler([0,0,0])
 
-        return startPos, startOrientation
