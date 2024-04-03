@@ -6,6 +6,10 @@ import pybullet_data
 
 from fobo2_env.src.utils import random_pos_orientation, distance_in_range
 from fobo2_env.src.robot_fobo import Robot
+from fobo2_env.src.human import Human
+from fobo2_env.src.world_generation import World
+
+
 class FoBo2Env(gym.Env):
     metadata = {'render_modes': ['DIRECT', 'GUI'], 'render_fps': 60}  
     def __init__(self, render_mode="DIRECT", rgb_width = 320, rgb_height = 320, depth_width = 320, depth_height= 320):
@@ -41,7 +45,8 @@ class FoBo2Env(gym.Env):
         # Create variable placeholders for pybullet objects
         self._planeId = None
         self._human_id = None
-        self._robot_id = None
+        self._robot = None
+        self._world = None
 
     def reset(self, seed=None, options=None):
         super().reset(seed=seed)
@@ -52,34 +57,26 @@ class FoBo2Env(gym.Env):
 
         self._planeId = p.loadURDF(
             physicsClientId = self._client_id,
-            fileName="plane.urdf", 
+            fileName='plane.urdf', 
             useFixedBase = True
         )
+        self._world = World(self._client_id)
 
-        human_start_pos, human_start_orientation = random_pos_orientation()
+        self._world.create_basic_room()
 
-        self._human_id = p.loadURDF(
-            physicsClientId = self._client_id,
-            fileName="urdf/human.urdf", 
-            basePosition = [1, 0, 1],
-            baseOrientation = human_start_orientation,
-            useFixedBase = False
-        )
+        robot_area, human_area = self._world.calculate_starting_areas(area1 = 0.2, area2 = 0.8)
 
-        # Remove default pybullet mass in human 
-        for i in range(p.getNumJoints(physicsClientId = self._client_id, bodyUniqueId = self._human_id )):
-            if i < 32:
-                p.changeDynamics(physicsClientId = self._client_id, bodyUniqueId = self._human_id, linkIndex = i, mass = 0)
-        p.changeDynamics(physicsClientId = self._client_id, bodyUniqueId = self._human_id, linkIndex = -1, mass = 0)
+        self._human = Human(self._client_id)
+        self._human.reset(starting_area=human_area)
 
-        self.robot = Robot(
+        self._robot = Robot(
             client_id = self._client_id,
             depth_width = self.depth_width,
             depth_height = self.depth_height,
             rgb_width = self.rgb_width,
             rgb_height = self.rgb_height
         )
-        self._robot_id = self.robot.reset()
+        self._robot.reset(starting_area=robot_area)
         # self.robot_id = p.loadURDF(
         #     physicsClientId = self._client_id,
         #     fileName="urdf/fobo2.urdf", 
@@ -118,7 +115,7 @@ class FoBo2Env(gym.Env):
     # TODO give robot wheels speed with action given, maybe camera should move here
     def _move_robot(self, action):
         # Set action speed in both wheels
-        self.robot.move(action=action)
+        self._robot.move(action=action)
 
         return 
 
@@ -126,11 +123,11 @@ class FoBo2Env(gym.Env):
     def _compute_reward(self, observation):
         robot_pose, _ =  p.getBasePositionAndOrientation(
             physicsClientId = self._client_id,
-            bodyUniqueId = self._robot_id
+            bodyUniqueId = self._robot.id
             )
         human_pose, _ =  p.getBasePositionAndOrientation(
             physicsClientId = self._client_id,
-            bodyUniqueId = self._human_id
+            bodyUniqueId = self._human.id
             )
         distance = np.sqrt(
             np.sum(
@@ -154,11 +151,11 @@ class FoBo2Env(gym.Env):
     # TODO read robot observations, speeds, images
     def _get_observation(self):
         observations = {"wheels-speed": 0, "human-pixel": [0, 0], "depth-image": 0}
-        rgb, depth = self.robot.get_images()
-        x, y = self.robot.get_human_coordinates(rgb)
+        rgb, depth = self._robot.get_images()
+        x, y = self._robot.get_human_coordinates(rgb)
         observations["depth-image"] = depth
         observations["human-pixel"] = np.array([x, y], dtype=np.uint8)
-        speedL, speedR = self.robot.get_motor_speeds()
+        speedL, speedR = self._robot.get_motor_speeds()
         observations["wheels-speed"] = np.array([speedL, speedR], dtype=np.float32)
         return observations
 

@@ -1,9 +1,14 @@
 import pybullet as p
+import numpy as np
 
 # TODO return random position and orientation, maybe between some limits given
-def random_pos_orientation():
-    startPos = [0,0,1.1]
-    startOrientation = p.getQuaternionFromEuler([0,0,0])
+def random_pos_orientation(area):
+    startPos = [
+        np.random.uniform(area[0][0], area[0][1]),
+        np.random.uniform(area[1][0], area[1][1]),
+        area[2]
+    ]
+    startOrientation = p.getQuaternionFromEuler([0,0,np.random.uniform(-np.pi, np.pi)])
 
     return startPos, startOrientation
 

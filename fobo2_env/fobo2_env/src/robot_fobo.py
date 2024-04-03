@@ -33,9 +33,9 @@ class Robot():
             self.relative_orientation = p.getQuaternionFromEuler(relative_orientation)
             self.current_pos = [0, 0, 0]
             self.current_orientation = {"roll": 0, "pitch": 0, "yaw": 0}
-            
-        def reset(self):
-            self.current_pos = [0, 0, 0]
+
+        def reset(self, robot_pos):
+            self.current_pos = robot_pos
             self.current_orientation = {"roll": 0, "pitch": 0, "yaw": 0}
 
         def get_image(self):
@@ -115,7 +115,7 @@ class Robot():
                 pitch : float,
                 yaw : float
             ):
-            rotate_relative_pos = self.rotate_by_yaw(robot_position, yaw)
+            rotate_relative_pos = self.rotate_by_yaw(self.relative_pose, yaw)
             self.current_pos = robot_position + rotate_relative_pos
             self.current_orientation["roll"] = roll
             self.current_orientation["pitch"] = pitch
@@ -126,7 +126,7 @@ class Robot():
                 position : np.array,
                 yaw : float
             ):
-            r_pos = np.copy(position)
+            r_pos = list(position)
             yaw = np.radians(yaw)
             r_pos[0] = -np.sin(yaw) * position[0]
             r_pos[1] = np.cos(yaw) * position[0]
@@ -148,6 +148,7 @@ class Robot():
         self.depth_height = depth_height
         self.rgb_width = rgb_width
         self.rgb_height = rgb_height
+        self.id = 0
 
         self.depth_camera = self.Camera(
             client_id = client_id,
@@ -165,35 +166,31 @@ class Robot():
             client_id = client_id,
             fov = 60,
             near = 0.02,
-            far = 4,
+            far = 10000,
             width = self.depth_width,
             height = self.depth_height,
             relative_pose = [0.2, 0, 0.15],
             relative_orientation = [0, 0, 0],
             mode = 'rgb'
         )
-        self.robot_id = 0
 
-
-    def reset(self):
-        robot_start_pos, robot_start_orientation = random_pos_orientation()
-
-        self.robot_id = p.loadURDF(
+    def reset(self, starting_area):
+        robot_start_pos, robot_start_orientation = random_pos_orientation((starting_area[0], starting_area[1], 0.4))
+        self.id= p.loadURDF(
             physicsClientId = self.client_id,
             fileName = os.path.dirname(__file__) + "/models/fobo2.urdf", 
             basePosition = robot_start_pos,
             baseOrientation = robot_start_orientation,
             useFixedBase = False
         )
-        self.depth_camera.reset()
-        self.rgb_camera.reset()
-
-        return self.robot_id
+        self.depth_camera.reset(robot_start_pos)
+        self.rgb_camera.reset(robot_start_pos)
+        self.move([0,0])
     
     def move(self, action):
         p.setJointMotorControl2(
             physicsClientId = self.client_id,
-            bodyIndex=self.robot_id,
+            bodyIndex=self.id,
             jointIndex=self.left_wheel,
             controlMode=p.VELOCITY_CONTROL,
             targetVelocity=action[0]
@@ -201,14 +198,14 @@ class Robot():
         # Right wheel
         p.setJointMotorControl2(
             physicsClientId = self.client_id,
-            bodyIndex=self.robot_id,
+            bodyIndex=self.id,
             jointIndex=self.right_wheel,
             controlMode=p.VELOCITY_CONTROL,
             targetVelocity=action[1]
         )
         robot_pose, robot_orientation = p.getBasePositionAndOrientation(
             physicsClientId = self.client_id,
-            bodyUniqueId = self.robot_id
+            bodyUniqueId = self.id
             )
         roll, pitch, yaw = self.orientation_in_grad(p.getEulerFromQuaternion(quaternion=robot_orientation))
 
@@ -224,7 +221,7 @@ class Robot():
             robot_position = np.array(robot_pose),
             roll = roll,
             pitch = pitch,
-            yaw = yaw
+            yaw =  yaw
         )
 
     def get_images(self):
@@ -238,16 +235,15 @@ class Robot():
     def get_motor_speeds(self):
         _ , speedL, _, _ = p.getJointState(
             physicsClientId = self.client_id,
-            bodyUniqueId=self.robot_id,
+            bodyUniqueId=self.id,
             jointIndex = self.left_wheel
         )
         _ , speedR, _, _ = p.getJointState(
             physicsClientId = self.client_id,
-            bodyUniqueId=self.robot_id,
+            bodyUniqueId=self.id,
             jointIndex = self.right_wheel
         )
         return speedL, speedR
-
 
     def get_human_coordinates(self, rgb):
         return 0, 0
