@@ -84,7 +84,9 @@ class Robot():
                     renderer=p.ER_BULLET_HARDWARE_OPENGL,
                     flags=p.ER_NO_SEGMENTATION_MASK
                 )
-                image = np.reshape(rgb, (self.params["height"], self.params["width"], 4)) * 1. / 255.
+                # image = np.reshape(rgb, (self.params["height"], self.params["width"], 4))
+                rgb = rgb[:, :, :3]
+                image = rgb
                 image = image.astype(np.uint8)
             elif self.mode == 'depth':
                 _, _, _, depth, _ = p.getCameraImage(

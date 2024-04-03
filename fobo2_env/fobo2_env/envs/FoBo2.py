@@ -3,8 +3,9 @@ from gymnasium import spaces
 import numpy as np
 import pybullet as p
 import pybullet_data
+import pyb_utils
 
-from fobo2_env.src.utils import random_pos_orientation, distance_in_range
+from fobo2_env.src.utils import distance_in_range, get_human_robot_distance, get_human_coordinates
 from fobo2_env.src.robot_fobo import Robot
 from fobo2_env.src.human import Human
 from fobo2_env.src.world_generation import World
@@ -60,11 +61,13 @@ class FoBo2Env(gym.Env):
             fileName='plane.urdf', 
             useFixedBase = True
         )
+        # Create world object
         self._world = World(self._client_id)
-
+        # Generate basic room, 4 walls
         self._world.create_basic_room()
 
-        robot_area, human_area = self._world.calculate_starting_areas(area1 = 0.2, area2 = 0.8)
+        # Get spawning zone for robot and human percentage
+        robot_area, human_area = self._world.calculate_starting_areas(area1 = 1, area2 = 1)
 
         self._human = Human(self._client_id)
         self._human.reset(starting_area=human_area)
@@ -76,7 +79,15 @@ class FoBo2Env(gym.Env):
             rgb_width = self.rgb_width,
             rgb_height = self.rgb_height
         )
-        self._robot.reset(starting_area=robot_area)
+        distance = 0
+        while distance < 0.8:
+            self._robot.reset(starting_area=robot_area)
+            distance = get_human_robot_distance(
+                client_id = self._client_id,
+                robot_id = self._robot.id,
+                human_id = self._human.id
+            )
+
         # self.robot_id = p.loadURDF(
         #     physicsClientId = self._client_id,
         #     fileName="urdf/fobo2.urdf", 
@@ -88,6 +99,15 @@ class FoBo2Env(gym.Env):
         observation = self._get_observation()
         info = self._get_info()
 
+        self.relevant_collisions = [(self._robot.id, self._human.id)]
+        for wall_id in self._world.ids:
+            self.relevant_collisions.append((self._robot.id, wall_id))
+
+        self.collision_detector = pyb_utils.CollisionDetector(
+            client_id = self._client_id,
+            collision_pairs = self.relevant_collisions
+        )
+
         return observation, info
     
     def step(self, action):
@@ -95,10 +115,6 @@ class FoBo2Env(gym.Env):
         self._human_walk()
         self._move_robot(action)
         observation = self._get_observation()
-
-        # p.performCollisionDetection(physicsClientId = self._client_id)
-        # contact_points = p.getContactPoints(physicsClientId = self._client_id, bodyA = self._robot_id)
-
         reward = self._compute_reward(observation)
         terminated, truncated = self._get_end_episode()
         info = self._get_info()
@@ -121,19 +137,10 @@ class FoBo2Env(gym.Env):
 
     # TODO calculate reward in this moment, should be based on robot-human distance
     def _compute_reward(self, observation):
-        robot_pose, _ =  p.getBasePositionAndOrientation(
-            physicsClientId = self._client_id,
-            bodyUniqueId = self._robot.id
-            )
-        human_pose, _ =  p.getBasePositionAndOrientation(
-            physicsClientId = self._client_id,
-            bodyUniqueId = self._human.id
-            )
-        distance = np.sqrt(
-            np.sum(
-                (np.array([robot_pose[0], robot_pose[1]]) - 
-                 np.array([human_pose[0], human_pose[1]]))**2
-            )
+        distance = get_human_robot_distance(
+            client_id = self._client_id,
+            robot_id = self._robot.id,
+            human_id = self._human.id
         )
         reward = 0.0
         if distance_in_range(distance=distance, desired_distance=self.desired_distance, offset=self.offset):
@@ -144,15 +151,18 @@ class FoBo2Env(gym.Env):
 
         return reward
     
-    # TODO check if episode es terminated, human reached target point, or truncated if any collision has been detected
+    # TODO check if episode is terminated, human reached target point, or truncated if any collision has been detected
     def _get_end_episode(self):
-        return False, False
+        truncated = False
+        terminated = False
+        if self.collision_detector.in_collision(margin = 0.0):
+            truncated = True
+        return terminated, truncated
 
-    # TODO read robot observations, speeds, images
     def _get_observation(self):
         observations = {"wheels-speed": 0, "human-pixel": [0, 0], "depth-image": 0}
         rgb, depth = self._robot.get_images()
-        x, y = self._robot.get_human_coordinates(rgb)
+        x, y = get_human_coordinates(rgb)
         observations["depth-image"] = depth
         observations["human-pixel"] = np.array([x, y], dtype=np.uint8)
         speedL, speedR = self._robot.get_motor_speeds()

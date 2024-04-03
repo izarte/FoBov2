@@ -2,6 +2,7 @@ import pybullet as p
 import os
 import numpy as np
 
+
 class World():
     def __init__(self, client_id):
         self.client_id = client_id
@@ -45,15 +46,14 @@ class World():
         x_range = x_max_value - x_min_value
         y_range = y_max_value - y_min_value
         area1_range = (
-            (x_min_value, x_min_value + x_range * 0.2),
-            (y_min_value, y_min_value + y_range * 0.2),
+            (x_min_value, x_min_value + x_range * area1),
+            (y_min_value, y_min_value + y_range * area1),
         )
 
         area2_range = (
             (x_max_value - x_range * area2, x_max_value),
             (y_max_value - y_range * area2, y_max_value),
         )
-        print(area1, area2)
 
         return area1_range, area2_range
 
