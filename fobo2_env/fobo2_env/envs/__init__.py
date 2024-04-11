@@ -1,1 +1,0 @@
-from fobo2_env.envs.FoBo2 import FoBo2Env

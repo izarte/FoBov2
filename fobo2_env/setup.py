@@ -5,6 +5,6 @@ setup(
     version="0.0.1",
     install_requires=["gymnasium==0.29.1", "pybullet==3.2.6"],
     package_data={
-        'fobo2_env': ['src/models/*'],
+        "fobo2_env": ["src/models/*"],
     },
 )
