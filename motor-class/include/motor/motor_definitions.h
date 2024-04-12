@@ -2,7 +2,7 @@
 #define MOTOR_DEFINITIONS_H
 
 
-#define FREQ 490
+#define FREQ 4000
 #define PWM_RESOLUTION 8
 
 
