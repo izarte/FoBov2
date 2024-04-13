@@ -57,12 +57,24 @@ def get_human_coordinates(rgb):
     if contours:
         # Get the largest contour
         largest_contour = max(contours, key=cv2.contourArea)
-
         # Calculate the moments of the contour
         M = cv2.moments(largest_contour)
-
-        # Calculate the centroid
-        centroid_x = int(M["m10"] / M["m00"])
-        centroid_y = int(M["m01"] / M["m00"])
-        centroid = (centroid_x, centroid_y)
+        if M["m00"]:
+            # Calculate the centroid
+            centroid_x = int(M["m10"] / M["m00"])
+            centroid_y = int(M["m01"] / M["m00"])
+            centroid = (centroid_x, centroid_y)
     return centroid
+
+
+# Function to add a value to the queue
+def add_to_queue(queue, value):
+    if queue.full():
+        queue.get()
+    queue.put(value)
+
+
+def get_images_as_array(queue):
+    images_list = list(queue.queue)
+    images_array = np.stack(images_list, axis=-1)
+    return images_array

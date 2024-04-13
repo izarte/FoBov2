@@ -1,3 +1,5 @@
+from queue import Queue
+
 import gymnasium as gym
 import numpy as np
 import pyb_utils
@@ -8,6 +10,7 @@ from gymnasium import spaces
 from fobo2_env.src.human import Human
 from fobo2_env.src.robot_fobo import Robot
 from fobo2_env.src.utils import (
+    add_to_queue,
     distance_in_range,
     get_human_coordinates,
     get_human_robot_distance,
@@ -25,23 +28,31 @@ class FoBo2Env(gym.Env):
         rgb_height=320,
         depth_width=320,
         depth_height=320,
+        memory=4,
     ):
         # Observation space are input variables for system
-
+        self.memory = memory
+        self.wheels_speed_queue = Queue(maxsize=memory)
+        self.human_pixel_queue = Queue(maxsize=memory)
+        self.depth_image_queue = Queue(maxsize=memory)
         self.observation_space = spaces.Dict(
             {
                 "wheels-speed": spaces.Box(
-                    low=np.array([-100, -100]),
-                    high=np.array([100, 100]),
+                    low=-100,
+                    high=100,
+                    shape=(memory, 2),
                     dtype=np.float32,
                 ),
                 "human-pixel": spaces.Box(
-                    low=0, high=255, shape=(rgb_width, rgb_height, 3), dtype=np.uint8
+                    low=-1,
+                    high=max(rgb_width, rgb_height),
+                    shape=(memory, 2),
+                    dtype=np.int8,
                 ),
                 "depth-image": spaces.Box(
                     low=0,
                     high=255,
-                    shape=(depth_width, depth_height, 1),
+                    shape=(memory, depth_width, depth_height),
                     dtype=np.uint8,
                 ),
                 # "desired-distance": spaces.Box(low=-0.1, high=4, shape=(1,),  dtype=float),
@@ -110,15 +121,8 @@ class FoBo2Env(gym.Env):
                 human_id=self._human.id,
             )
 
-        # self.robot_id = p.loadURDF(
-        #     physicsClientId = self._client_id,
-        #     fileName="urdf/fobo2.urdf",
-        #     basePosition = robot_start_pos,
-        #     baseOrientation = robot_start_orientation,
-        #     useFixedBase = False
-        # )
-
-        observation = self._get_observation()
+        for _ in range(self.memory):
+            observation = self._get_observation()
         info = self._get_info()
 
         self.relevant_collisions = [(self._robot.id, self._human.id)]
@@ -167,7 +171,7 @@ class FoBo2Env(gym.Env):
         ):
             reward += 1.0
 
-        if observation["human-pixel"][0] >= 0:
+        if observation["human-pixel"][-1][0] >= 0:
             reward += 1.0
 
         return reward
@@ -183,10 +187,19 @@ class FoBo2Env(gym.Env):
         observations = {"wheels-speed": 0, "human-pixel": [0, 0], "depth-image": 0}
         rgb, depth = self._robot.get_images()
         x, y = get_human_coordinates(rgb)
-        observations["depth-image"] = depth
-        observations["human-pixel"] = np.array([x, y], dtype=np.uint8)
         speedL, speedR = self._robot.get_motor_speeds()
-        observations["wheels-speed"] = np.array([speedL, speedR], dtype=np.float32)
+        add_to_queue(
+            self.wheels_speed_queue, np.array([speedL, speedR], dtype=np.float32)
+        )
+        add_to_queue(self.human_pixel_queue, np.array([x, y], dtype=np.int8))
+        add_to_queue(self.depth_image_queue, np.array(depth, dtype=np.uint8))
+        observations["wheels-speed"] = np.array(
+            list(self.wheels_speed_queue.queue), dtype=np.float32
+        )
+        observations["human-pixel"] = np.array(
+            list(self.human_pixel_queue.queue), dtype=np.int8
+        )
+        observations["depth-image"] = np.array(list(depth), dtype=np.uint8)
         return observations
 
     # TODO get current environment information
