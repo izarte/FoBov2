@@ -18,9 +18,9 @@ def random_pos_orientation(area):
 
 def distance_in_range(distance: float, desired_distance: float, offset: float) -> bool:
     difference = distance - desired_distance
-    if difference > 0 and difference < offset:
+    if difference > 0 and difference <= offset:
         return True
-    if difference < 0 and difference < -offset:
+    if difference < 0 and difference <= -offset:
         return True
     return False
 
@@ -42,6 +42,22 @@ def get_human_robot_distance(client_id: int, robot_id: int, human_id: int) -> fl
         )
     )
     return distance
+
+
+def rotate_by_yaw(position: np.array, yaw: float):
+    r_pos = list(position)
+    yaw = np.radians(yaw)
+    r_pos[0] = -np.sin(yaw) * position[0]
+    r_pos[1] = np.cos(yaw) * position[0]
+    return np.array(r_pos)
+
+
+def orientation_in_grad(orientation):
+    roll = np.degrees(orientation[0])
+    pitch = np.degrees(orientation[1])
+    yaw = np.degrees(orientation[2])
+
+    return roll, pitch, yaw + 90
 
 
 def get_human_coordinates(rgb):

@@ -60,7 +60,7 @@ class FoBo2Env(gym.Env):
         )
         # We have 4 actions, corresponding to "right", "up", "left", "down"
         self.action_space = spaces.Box(
-            low=np.array([-100, -100]), high=np.array([100, 100]), dtype=np.float32
+            low=np.array([-10, -10]), high=np.array([10, 10]), dtype=np.float32
         )
 
         self.depth_width = depth_width
@@ -71,7 +71,7 @@ class FoBo2Env(gym.Env):
         self.depth_camera_realtive_position = [0.1, 0, 0.5]
         self.rgb_camera_realtive_position = [-0.1, 0, 0.5]
         self.desired_distance = 1.5
-        self.offset = 0.5
+        self.offset = 0.2
 
         if render_mode == "DIRECT":
             self._client_id = p.connect(p.DIRECT)
@@ -80,7 +80,7 @@ class FoBo2Env(gym.Env):
 
         # Create variable placeholders for pybullet objects
         self._planeId = None
-        self._human_id = None
+        self._human = None
         self._robot = None
         self._world = None
 
@@ -151,6 +151,7 @@ class FoBo2Env(gym.Env):
 
     # TODO human walking movement and animation
     def _human_walk(self):
+        self._human.step()
         return
 
     def _move_robot(self, action):
@@ -163,7 +164,7 @@ class FoBo2Env(gym.Env):
         distance = get_human_robot_distance(
             client_id=self._client_id, robot_id=self._robot.id, human_id=self._human.id
         )
-        reward = 0.0
+        reward = -1.0
         if distance_in_range(
             distance=distance,
             desired_distance=self.desired_distance,

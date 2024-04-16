@@ -1,0 +1,11 @@
+version: "3.0"
+services:
+  ros2:
+    image: inigo183/fobo:ros2_core
+    volumes:
+      - ./ros2_ws:/ros2_ws
+      - /dev/bus/usb:/dev/bus/usb
+    container_name: ros2
+    # network_mode: "host"
+    privileged: true
+    command: "'source /ros2_ws/install/setup.bash && ros2 launch fobo launch.py'"
