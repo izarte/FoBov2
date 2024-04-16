@@ -1,11 +1,21 @@
 version: "3.0"
 services:
-  ros2:
-    image: inigo183/fobo:ros2_core
+  train-fobo:
+    image: inigo183/train-fobo:latest
     volumes:
-      - ./ros2_ws:/ros2_ws
-      - /dev/bus/usb:/dev/bus/usb
-    container_name: ros2
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - /home/izarate/datos:/usr/src/data
+    container_name: train-fobo
     # network_mode: "host"
+    environment:
+    - DISPLAY=$DISPLAY
+    - TRAIN_MODE=GUI
+    - SAVE_MODEL_PATH=/usr/src/data
     privileged: true
-    command: "'source /ros2_ws/install/setup.bash && ros2 launch fobo launch.py'"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
