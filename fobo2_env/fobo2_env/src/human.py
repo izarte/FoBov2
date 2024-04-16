@@ -5,7 +5,6 @@ import numpy as np
 from fobo2_env.src.utils import (
     random_pos_orientation,
     rotate_by_yaw,
-    orientation_in_grad,
     distance_in_range,
 )
 from fobo2_env.src.walking_simulation_utils import (

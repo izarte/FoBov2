@@ -149,7 +149,6 @@ class FoBo2Env(gym.Env):
     def close(self):
         p.disconnect(self._client_id)
 
-    # TODO human walking movement and animation
     def _human_walk(self):
         self._human.step()
         return
