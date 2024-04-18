@@ -35,7 +35,7 @@ class Robot:
             }
             self.mode = mode
             self.relative_pose = np.array(relative_pose)
-            self.relative_orientation = p.getQuaternionFromEuler(relative_orientation)
+            self.relative_orientation = relative_orientation
             self.current_pos = [0, 0, 0]
             self.current_orientation = {"roll": 0, "pitch": 0, "yaw": 0}
 
@@ -48,9 +48,9 @@ class Robot:
                 physicsClientId=self.client_id,
                 cameraTargetPosition=self.current_pos,
                 distance=0.25,
-                roll=self.current_orientation["roll"],
-                pitch=self.current_orientation["pitch"],
-                yaw=self.current_orientation["yaw"],
+                roll=self.current_orientation["roll"] + self.relative_orientation[0],
+                pitch=self.current_orientation["pitch"] + self.relative_orientation[1],
+                yaw=self.current_orientation["yaw"] + self.relative_orientation[2],
                 upAxisIndex=2,
             )
             projection_matrix = p.computeProjectionMatrixFOV(
@@ -145,25 +145,25 @@ class Robot:
 
         self.depth_camera = self.Camera(
             client_id=client_id,
-            fov=60,
+            fov=70,
             near=0.02,
             far=4,
             width=self.depth_width,
             height=self.depth_height,
-            relative_pose=[0.2, 0, 0.15],
+            relative_pose=[0.50, 0, 0.030],
             relative_orientation=[0, 0, 0],
             mode="depth",
         )
 
         self.rgb_camera = self.Camera(
             client_id=client_id,
-            fov=60,
+            fov=84,
             near=0.02,
             far=10000,
             width=self.depth_width,
             height=self.depth_height,
-            relative_pose=[0.2, 0, 0.15],
-            relative_orientation=[0, 0, 0],
+            relative_pose=[0.50, 0, 0.15],
+            relative_orientation=[0, 30, 0],
             mode="rgb",
         )
 
@@ -206,21 +206,21 @@ class Robot:
         )
 
         # Calculate camera positions
-        # self.depth_camera.move(
-        #     robot_position=np.array(robot_pose), roll=roll, pitch=pitch, yaw=yaw
-        # )
+        self.depth_camera.move(
+            robot_position=np.array(robot_pose), roll=roll, pitch=pitch, yaw=yaw
+        )
 
-        # self.rgb_camera.move(
-        #     robot_position=np.array(robot_pose), roll=roll, pitch=pitch, yaw=yaw
-        # )
+        self.rgb_camera.move(
+            robot_position=np.array(robot_pose), roll=roll, pitch=pitch, yaw=yaw
+        )
 
     def get_images(self):
-        # depth_image = self.depth_camera.get_image()
-        # rgb_image = self.rgb_camera.get_image()
-        # noise_depth = self.depth_camera.add_noise(depth_image)
-        # noise_rgb = self.rgb_camera.add_noise(rgb_image)
-        noise_rgb = np.zeros((self.rgb_width, self.rgb_width, 3))
-        noise_depth = np.zeros((self.depth_width, self.depth_width))
+        depth_image = self.depth_camera.get_image()
+        rgb_image = self.rgb_camera.get_image()
+        noise_depth = self.depth_camera.add_noise(depth_image)
+        noise_rgb = self.rgb_camera.add_noise(rgb_image)
+        # noise_rgb = np.zeros((self.rgb_width, self.rgb_width, 3))
+        # noise_depth = np.zeros((self.depth_width, self.depth_width))
         return noise_rgb, noise_depth
 
     def get_motor_speeds(self):

@@ -150,7 +150,7 @@ class FoBo2Env(gym.Env):
         p.disconnect(self._client_id)
 
     def _human_walk(self):
-        self._human.step()
+        # self._human.step()
         return
 
     def _move_robot(self, action):

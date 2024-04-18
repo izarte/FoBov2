@@ -18,7 +18,7 @@ class World:
             p.getQuaternionFromEuler([0, 0, 0]),
             p.getQuaternionFromEuler([0, 0, np.radians(90)]),
         ]
-        wall_positions = [[-5, 0, 0], [0, -5, 0], [5, 0, 0], [0, 5, 0]]
+        wall_positions = [[-20, 0, 0], [0, -20, 0], [20, 0, 0], [0, 20, 0]]
 
         # Get min values for x y coordinates
         self.min_values = tuple(min(col) for col in zip(*wall_positions))
