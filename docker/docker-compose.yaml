@@ -1,16 +1,20 @@
 version: "3.0"
 services:
   train-fobo:
+    container_name: train-fobo
     image: inigo183/train-fobo:latest
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
       - /home/izarate/datos:/usr/src/data
-    container_name: train-fobo
+      - /home/izarate/train_fobo.py:/usr/src/train_fobo.py
+      - /home/izarate/fobo2_env:/usr/src/fobo2_env
     # network_mode: "host"
     environment:
-    - DISPLAY=$DISPLAY
-    - TRAIN_MODE=GUI
-    - SAVE_MODEL_PATH=/usr/src/data
+      # - DISPLAY=$DISPLAY
+      - TRAIN_MODE=DIRECT
+      - SAVE_MODEL_PATH=/usr/src/data
+      - USED_GPU=3
+    user: "${UID}:${GID}"
     privileged: true
     deploy:
       resources:
