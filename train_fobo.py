@@ -18,7 +18,7 @@ from optuna.samplers import TPESampler
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.callbacks import EvalCallback
 from stable_baselines3.common.callbacks import CheckpointCallback
-
+from stable_baselines3.common.vec_env import SubprocVecEnv
 
 N_TRIALS = 100
 N_STARTUP_TRIALS = 5
@@ -86,6 +86,10 @@ def sample_sac_params(trial: optuna.Trial) -> Dict[str, Any]:
     #     # target_entropy = trial.suggest_categorical('target_entropy', ['auto', 5, 1, 0, -1, -5, -10, -20, -50])
     #     target_entropy = trial.suggest_float('target_entropy', -10, 10)
 
+    memory_size = trial.suggest_categorical("memory", [4, 6, 8, 10, 16, 24, 32, 64])
+    rgb_size = trial.suggest_categorical("rgb_size", [16, 32, 64, 128, 256, 512])
+    depth_size = trial.suggest_categorical("depth_size", [16, 32, 64, 128, 256, 512])
+
     hyperparams = {
         "gamma": gamma,
         "learning_rate": learning_rate,
@@ -100,7 +104,15 @@ def sample_sac_params(trial: optuna.Trial) -> Dict[str, Any]:
         "policy_kwargs": dict(log_std_init=log_std_init),
     }
 
-    return hyperparams
+    env_kwargs = {
+        "memory": memory_size,
+        "rgb_width": rgb_size,
+        "rgb_height": rgb_size,
+        "depth_width": depth_size,
+        "depth_height": depth_size,
+    }
+
+    return hyperparams, env_kwargs
 
 
 class TrialEvalCallback(EvalCallback):
@@ -141,8 +153,10 @@ class TrialEvalCallback(EvalCallback):
 def objective(trial: optuna.Trial) -> float:
     kwargs = DEFAULT_HYPERPARAMS.copy()
     # Sample hyperparameters.
-    kwargs.update(sample_sac_params(trial))
+    new_kwargs, new_env_kwargs = sample_sac_params(trial)
+    kwargs.update(new_kwargs)
     env_kwargs = {"render_mode": "DIRECT"}
+    env_kwargs.update(new_env_kwargs)
     log_dir = save_path + "/logs/"
     vec_env = make_vec_env(
         DEFAULT_HYPERPARAMS["env"],
@@ -247,6 +261,7 @@ def train(gpu, mode, save_path):
         monitor_dir=log_dir,
         # monitor_kwargs=monitor_kwargs,
         env_kwargs=env_kwargs,
+        vec_env_cls=SubprocVecEnv,
     )
 
     model = SAC(
