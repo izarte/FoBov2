@@ -6,7 +6,7 @@
     <xacro:property name="chassis_length" value="0.55"/>
     <xacro:property name="chassis_width" value="0.35"/>
     <xacro:property name="chassis_depth" value="0.01"/>
-    <xacro:property name="chassis_mass" value="1"/>
+    <xacro:property name="chassis_mass" value="0.654"/>
     <!-- Motor cylinder parameters -->
     <xacro:property name="motor_radius" value="0.032"/>
     <xacro:property name="motor_length" value="0.105"/>
@@ -154,11 +154,11 @@
         </joint>
     </xacro:macro>
     <xacro:macro name="sphere_joint" params="name parent child xyz">
-        <joint name="${name}" type="floating">
+        <joint name="${name}" type="spherical">
             <parent link="${parent}" />
             <child link="${child}" />
             <origin xyz="${xyz}" rpy="0 0 0"/>
-            <!-- <axis xyz="0 0 1"/>  -->
+            <axis xyz="0 0 1"/> 
         </joint>
     </xacro:macro>
 
