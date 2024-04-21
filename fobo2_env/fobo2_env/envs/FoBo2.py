@@ -14,6 +14,7 @@ from fobo2_env.src.utils import (
     distance_in_range,
     get_human_coordinates,
     get_human_robot_distance,
+    calculate_linear_score,
 )
 from fobo2_env.src.world_generation import World
 
@@ -77,6 +78,7 @@ class FoBo2Env(gym.Env):
         self.rgb_camera_realtive_position = [-0.1, 0, 0.5]
         self.desired_distance = 1.5
         self.offset = 0.2
+        self.start_scoring_offset = 3
 
         if render_mode == "DIRECT":
             self._client_id = p.connect(p.DIRECT)
@@ -183,15 +185,46 @@ class FoBo2Env(gym.Env):
             client_id=self._client_id, robot_id=self._robot.id, human_id=self._human.id
         )
         reward = -1.0
+        if distance < self.desired_distance - self.offset:
+            reward -= 2.0
         if distance_in_range(
             distance=distance,
             desired_distance=self.desired_distance,
             offset=self.offset,
         ):
             reward += 1.0
+        if distance < self.desired_distance + self.start_scoring_offset:
+            score = calculate_linear_score(
+                max_score=2,
+                max_value=self.desired_distance,
+                min_score=1,
+                min_value=self.desired_distance + self.start_scoring_offset,
+                value=distance,
+            )
+            # Linear function to calculate score, s=2 when distance = 1.5 and s=1  when distance = 3.5
+            # m = (2 - 1) / (
+            #     self.desired_distance
+            #     - (self.desired_distance + self.start_scoring_offset)
+            # )
+            # b = 2 + (m * self.desired_distance)
+            # distance_based_score = distance * m + b
+            reward += score
 
         if observation["human-pixel"][-1][0] >= 0:
-            reward += 1.0
+            pixel_x = distance = observation["human-pixel"][-1][0]
+            if distance_in_range(
+                distance=pixel_x,
+                desired_distance=0.5,
+                offset=0.1,
+            ):
+                reward += 2.0
+            else:
+                if pixel_x > 0.5:
+                    pixel_x = 0.5 - (pixel_x - 0.5)
+                score = calculate_linear_score(
+                    max_score=2, max_value=0.5, min_score=1, min_value=0, value=pixel_x
+                )
+                reward += score
 
         return reward
 
@@ -226,6 +259,9 @@ class FoBo2Env(gym.Env):
 
     def _normalize_observation(self, observations):
         for key in observations.keys():
+            if key == "wheels-speed":
+                if observations[key][0] == -1:
+                    continue
             observations[key] = (observations[key] - self.boundings[key][0]) / (
                 self.boundings[key][1] - self.boundings[key][0]
             )

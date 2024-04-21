@@ -94,3 +94,10 @@ def get_images_as_array(queue):
     images_list = list(queue.queue)
     images_array = np.stack(images_list, axis=-1)
     return images_array
+
+
+def calculate_linear_score(max_score, min_score, max_value, min_value, value) -> float:
+    m = (max_score - min_score) / (max_value - min_value)
+    b = max_score + (m * max_value)
+    score = value * m + b
+    return score
