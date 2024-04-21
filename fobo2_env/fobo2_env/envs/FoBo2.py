@@ -35,32 +35,37 @@ class FoBo2Env(gym.Env):
         self.wheels_speed_queue = Queue(maxsize=memory)
         self.human_pixel_queue = Queue(maxsize=memory)
         self.depth_image_queue = Queue(maxsize=memory)
+        self.boundings = {
+            "wheels-speed": [-35, 35],
+            "human-pixel": [0, rgb_width],
+            "depth-image": [0, 255],
+        }
         self.observation_space = spaces.Dict(
             {
                 "wheels-speed": spaces.Box(
-                    low=-100,
-                    high=100,
+                    low=-1,
+                    high=1,
                     shape=(memory, 2),
-                    dtype=np.float32,
+                    dtype=np.float64,
                 ),
                 "human-pixel": spaces.Box(
                     low=-1,
-                    high=max(rgb_width, rgb_height),
+                    high=1,
                     shape=(memory, 2),
-                    dtype=np.int8,
+                    dtype=np.float64,
                 ),
                 "depth-image": spaces.Box(
-                    low=0,
-                    high=255,
+                    low=-1,
+                    high=1,
                     shape=(memory, depth_width, depth_height),
-                    dtype=np.uint8,
+                    dtype=np.float64,
                 ),
                 # "desired-distance": spaces.Box(low=-0.1, high=4, shape=(1,),  dtype=float),
             }
         )
         # We have 4 actions, corresponding to "right", "up", "left", "down"
         self.action_space = spaces.Box(
-            low=np.array([-10, -10]), high=np.array([10, 10]), dtype=np.float32
+            low=np.array([-1, -1]), high=np.array([1, 1]), dtype=np.float64
         )
 
         self.depth_width = depth_width
@@ -138,10 +143,13 @@ class FoBo2Env(gym.Env):
     def step(self, action):
         p.stepSimulation(physicsClientId=self._client_id)
         self._human_walk()
-        self._move_robot(action)
+        scaled_action = self._normalize_action(action)
+        self._move_robot(scaled_action)
         observation = self._get_observation()
         reward = self._compute_reward(observation)
         terminated, truncated = self._get_end_episode()
+        if truncated:
+            reward = -10
         info = self._get_info()
 
         return observation, reward, terminated, truncated, info
@@ -155,6 +163,17 @@ class FoBo2Env(gym.Env):
 
     def _move_robot(self, action):
         # Set action speed in both wheels
+        # print(f"client ID: {self._client_id} robot ID: {self._robot.id}")
+        # for i in range(
+        #     p.getNumJoints(physicsClientId=self._client_id, bodyUniqueId=self._robot.id)
+        # ):
+        #     print(
+        #         p.getJointInfo(
+        #             physicsClientId=self._client_id,
+        #             bodyUniqueId=self._robot.id,
+        #             jointIndex=i,
+        #         )
+        #     )
         self._robot.move(action=action)
 
         return
@@ -189,18 +208,36 @@ class FoBo2Env(gym.Env):
         x, y = get_human_coordinates(rgb)
         speedL, speedR = self._robot.get_motor_speeds()
         add_to_queue(
-            self.wheels_speed_queue, np.array([speedL, speedR], dtype=np.float32)
+            self.wheels_speed_queue, np.array([speedL, speedR], dtype=np.float64)
         )
         add_to_queue(self.human_pixel_queue, np.array([x, y], dtype=np.int8))
         add_to_queue(self.depth_image_queue, np.array(depth, dtype=np.uint8))
         observations["wheels-speed"] = np.array(
-            list(self.wheels_speed_queue.queue), dtype=np.float32
+            list(self.wheels_speed_queue.queue), dtype=np.float64
         )
         observations["human-pixel"] = np.array(
             list(self.human_pixel_queue.queue), dtype=np.int8
         )
-        observations["depth-image"] = np.array(list(depth), dtype=np.uint8)
+        observations["depth-image"] = np.array(
+            list(self.depth_image_queue.queue), dtype=np.uint8
+        )
+        norm_observations = self._normalize_observation(observations=observations)
+        return norm_observations
+
+    def _normalize_observation(self, observations):
+        for key in observations.keys():
+            observations[key] = (observations[key] - self.boundings[key][0]) / (
+                self.boundings[key][1] - self.boundings[key][0]
+            )
         return observations
+
+    def _normalize_action(self, norm_action):
+        action = (
+            norm_action
+            * (self.boundings["wheels-speed"][1] - self.boundings["wheels-speed"][0])
+            + self.boundings["wheels-speed"][0]
+        )
+        return action
 
     # TODO get current environment information
     def _get_info(self):

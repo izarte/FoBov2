@@ -180,16 +180,21 @@ class Robot:
         )
         self.depth_camera.reset(robot_start_pos)
         self.rgb_camera.reset(robot_start_pos)
+        print(f"client ID: {self.client_id} robot ID: {self.id}")
+        for i in range(
+            p.getNumJoints(physicsClientId=self.client_id, bodyUniqueId=self.id)
+        ):
+            print(
+                p.getJointInfo(
+                    physicsClientId=self.client_id, bodyUniqueId=self.id, jointIndex=i
+                )
+            )
         self.move([0, 0])
 
     def move(self, action):
-        p.setJointMotorControl2(
-            physicsClientId=self.client_id,
-            bodyIndex=self.id,
-            jointIndex=self.left_wheel,
-            controlMode=p.VELOCITY_CONTROL,
-            targetVelocity=action[0],
-        )
+        print("action: ", action)
+        print(self.right_wheel)
+        print(self.left_wheel)
         # Right wheel
         p.setJointMotorControl2(
             physicsClientId=self.client_id,
@@ -197,6 +202,14 @@ class Robot:
             jointIndex=self.right_wheel,
             controlMode=p.VELOCITY_CONTROL,
             targetVelocity=action[1],
+        )
+        # Left wheel
+        p.setJointMotorControl2(
+            physicsClientId=self.client_id,
+            bodyIndex=self.id,
+            jointIndex=self.left_wheel,
+            controlMode=p.VELOCITY_CONTROL,
+            targetVelocity=action[0],
         )
         robot_pose, robot_orientation = p.getBasePositionAndOrientation(
             physicsClientId=self.client_id, bodyUniqueId=self.id

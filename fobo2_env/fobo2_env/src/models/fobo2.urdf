@@ -39,8 +39,8 @@
       <origin rpy="0 0 0" xyz="0 0 0"/>
     </collision>
     <inertial>
-      <mass value="1"/>
-      <inertia ixx="0.010216666666666666" ixy="0" ixz="0" iyy="0.02521666666666667" iyz="0" izz="0.02521666666666667"/>
+      <mass value="0.654"/>
+      <inertia ixx="0.0066817" ixy="0" ixz="0" iyy="0.0164917" iyz="0" izz="0.0164917"/>
     </inertial>
   </link>
   <!-- Motor links -->
@@ -61,8 +61,8 @@
       <origin rpy="0 0 0" xyz="0 0 0"/>
     </collision>
     <inertial>
-      <mass value="1"/>
-      <inertia ixx="0.0011747499999999998" ixy="0" ixz="0" iyy="0.0011747499999999998" iyz="0" izz="0.000512"/>
+      <mass value="0.438"/>
+      <inertia ixx="0.0005145404999999999" ixy="0" ixz="0" iyy="0.0005145404999999999" iyz="0" izz="0.00022425600000000002"/>
     </inertial>
   </link>
   <link name="motor-left">
@@ -82,8 +82,8 @@
       <origin rpy="0 0 0" xyz="0 0 0"/>
     </collision>
     <inertial>
-      <mass value="1"/>
-      <inertia ixx="0.0011747499999999998" ixy="0" ixz="0" iyy="0.0011747499999999998" iyz="0" izz="0.000512"/>
+      <mass value="0.438"/>
+      <inertia ixx="0.0005145404999999999" ixy="0" ixz="0" iyy="0.0005145404999999999" iyz="0" izz="0.00022425600000000002"/>
     </inertial>
   </link>
   <!-- Wheel links -->
@@ -104,8 +104,8 @@
       <origin rpy="0 0 0" xyz="0 0 0"/>
     </collision>
     <inertial>
-      <mass value="1"/>
-      <inertia ixx="0.004245333333333333" ixy="0" ixz="0" iyy="0.004245333333333333" iyz="0" izz="0.0072"/>
+      <mass value="0.237"/>
+      <inertia ixx="0.0010061439999999998" ixy="0" ixz="0" iyy="0.0010061439999999998" iyz="0" izz="0.0017063999999999996"/>
     </inertial>
   </link>
   <link name="wheel-left">
@@ -125,8 +125,8 @@
       <origin rpy="0 0 0" xyz="0 0 0"/>
     </collision>
     <inertial>
-      <mass value="1"/>
-      <inertia ixx="0.004245333333333333" ixy="0" ixz="0" iyy="0.004245333333333333" iyz="0" izz="0.0072"/>
+      <mass value="0.237"/>
+      <inertia ixx="0.0010061439999999998" ixy="0" ixz="0" iyy="0.0010061439999999998" iyz="0" izz="0.0017063999999999996"/>
     </inertial>
   </link>
   <!-- Ball links -->
@@ -249,16 +249,16 @@
     <child link="stick-back"/>
     <origin xyz="-0.22500000000000003 0 -0.051" rpy="0 0 0"/>
   </joint>
-  <joint name="ball-front-joint" type="floating">
+  <joint name="ball-front-joint" type="spherical">
     <parent link="base_link"/>
     <child link="ball-front"/>
     <origin xyz="0.22500000000000003 0 -0.115" rpy="0 0 0"/>
-    <!-- <axis xyz="0 0 1"/>  -->
+    <axis xyz="0 0 1"/>
   </joint>
-  <joint name="ball-back-joint" type="floating">
+  <joint name="ball-back-joint" type="spherical">
     <parent link="base_link"/>
     <child link="ball-back"/>
     <origin xyz="-0.22500000000000003 0 -0.115" rpy="0 0 0"/>
-    <!-- <axis xyz="0 0 1"/>  -->
+    <axis xyz="0 0 1"/>
   </joint>
 </robot>
