@@ -1,4 +1,5 @@
 import os
+import cv2
 
 import numpy as np
 import pybullet as p
@@ -93,6 +94,8 @@ class Robot:
                 rgb = rgb[:, :, :3]
                 image = rgb
                 image = image.astype(np.uint8)
+                cv2.imshow("image", image)
+                cv2.waitKey(1)
             elif self.mode == "depth":
                 _, _, _, depth, _ = p.getCameraImage(
                     physicsClientId=self.client_id,
@@ -195,6 +198,18 @@ class Robot:
         print("action: ", action)
         print(self.right_wheel)
         print(self.left_wheel)
+        print(f"client ID: {self.client_id} robot ID: {self.id}")
+        print(p.getNumJoints(physicsClientId=self.client_id, bodyUniqueId=self.id))
+        for i in range(
+            p.getNumJoints(physicsClientId=self.client_id, bodyUniqueId=self.id)
+        ):
+            print(
+                p.getJointInfo(
+                    physicsClientId=self.client_id,
+                    bodyUniqueId=self.id,
+                    jointIndex=i,
+                )
+            )
         # Right wheel
         p.setJointMotorControl2(
             physicsClientId=self.client_id,

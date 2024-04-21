@@ -260,9 +260,9 @@ class FoBo2Env(gym.Env):
     def _normalize_observation(self, observations):
         for key in observations.keys():
             if key == "wheels-speed":
-                if observations[key][0] == -1:
+                if observations[key][-1][0] == -1:
                     continue
-            observations[key] = (observations[key] - self.boundings[key][0]) / (
+            observations[key][-1] = (observations[key][-1] - self.boundings[key][0]) / (
                 self.boundings[key][1] - self.boundings[key][0]
             )
         return observations
