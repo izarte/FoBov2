@@ -26,19 +26,19 @@
     <xacro:property name="stick_length" value="0.102" />
 
 
-    <!-- define colors -->
+    <!-- Define colors -->
     <material name="white">
         <color rgba="1 1 1 1"/>
     </material>
-
     <material name="black">
         <color rgba="0 0 0 1"/>
     </material>
-
     <material name="red">
         <color rgba="1 0 0 1"/>
     </material>
-
+    <material name="blue">
+        <color rgba="0 0 1 1"/>
+    </material>
 
     <xacro:macro name="cylinder_inertia" params="m r h">
         <inertia  ixx="${m*(3*r*r+h*h)/12}" ixy = "0" ixz = "0"
@@ -68,9 +68,7 @@
                 <box size="${length} ${width} ${depth}"/>
             </geometry>
                 <origin rpy="0 0 0" xyz="0 0 0"/>
-                <material name="${color}">
-                    <!-- <color rgba="1 1 1 1"/> -->
-                </material>
+                <material name="${color}"/>
             </visual>
             <collision>
             <geometry>
@@ -86,29 +84,35 @@
     </xacro:macro>
 
 
-    <xacro:macro name="cylinder_link" params="link_name radius length mass color">
-        <link name="${link_name}">
-            <visual>
-                <geometry>
-                    <cylinder radius="${radius}" length="${length}"/>
-                </geometry>
-                <origin rpy="0 0 0" xyz="0 0 0"/>
-                <material name="${color}">
-                    <color rgba="1 1 1 1"/>
-                </material>
-            </visual>
-            <collision>
-                <geometry>
-                    <cylinder radius="${radius}" length="${length}"/>
-                </geometry>
-                <origin rpy="0 0 0" xyz="0 0 0"/>
-            </collision>
-            <inertial>
-                <mass value="${mass}"/>
-                <xacro:cylinder_inertia m="${mass}" r="${radius}" h="${length}" />
-            </inertial>
-        </link>
-    </xacro:macro>
+<xacro:macro name="cylinder_link" params="link_name radius length mass color lateral_friction">
+    <link name="${link_name}">
+        <visual>
+            <geometry>
+                <cylinder radius="${radius}" length="${length}"/>
+            </geometry>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <material name="${color}"/>
+        </visual>
+        <collision>
+            <geometry>
+                <cylinder radius="${radius}" length="${length}"/>
+            </geometry>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <surface>
+                <friction>
+                    <ode>
+                        <mu>${lateral_friction}</mu>
+                        <mu2>${lateral_friction}</mu2>
+                    </ode>
+                </friction>
+            </surface>
+        </collision>
+        <inertial>
+            <mass value="${mass}"/>
+            <xacro:cylinder_inertia m="${mass}" r="${radius}" h="${length}" />
+        </inertial>
+    </link>
+</xacro:macro>
 
     <xacro:macro name="sphere_link" params="link_name radius mass color">
         <link name="${link_name}">
@@ -117,9 +121,7 @@
                     <sphere radius="${radius}" />
                 </geometry>
                 <origin rpy="0 0 0" xyz="0 0 0"/>
-                <material name="${color}">
-                    <color rgba="1 1 1 1"/>
-                </material>
+                <material name="${color}"/>
             </visual>
             <collision>
                 <geometry>
@@ -150,7 +152,7 @@
             <parent link="${parent}" />
             <child link="${child}" />
             <origin xyz="${xyz}" rpy="0 0 0"/>
-            <axis xyz="0 0 1"/> 
+            <axis xyz="0 0 -1"/> 
         </joint>
     </xacro:macro>
     <xacro:macro name="sphere_joint" params="name parent child xyz">
@@ -166,14 +168,14 @@
     <!-- Base link -->
     <xacro:box_link link_name="base_link" length="${chassis_length}" width="${chassis_width}" depth="${chassis_depth}" mass="${chassis_mass}" color="white" />
     <!-- Motor links -->
-    <xacro:cylinder_link link_name="motor-right" radius="${motor_radius}" length="${motor_length}" mass="${motor_mass}" color="white" />
-    <xacro:cylinder_link link_name="motor-left" radius="${motor_radius}" length="${motor_length}" mass="${motor_mass}" color="white" />
+    <xacro:cylinder_link link_name="motor-right" radius="${motor_radius}" length="${motor_length}" mass="${motor_mass}" color="white" lateral_friction="0" />
+    <xacro:cylinder_link link_name="motor-left" radius="${motor_radius}" length="${motor_length}" mass="${motor_mass}" color="white" lateral_friction="0" />
     <!-- Wheel links -->
-    <xacro:cylinder_link link_name="wheel-right" radius="${wheel_radius}" length="${wheel_length}" mass="${wheel_mass}" color="black" />
-    <xacro:cylinder_link link_name="wheel-left" radius="${wheel_radius}" length="${wheel_length}" mass="${wheel_mass}" color="black" />
+    <xacro:cylinder_link link_name="wheel-right" radius="${wheel_radius}" length="${wheel_length}" mass="${wheel_mass}" color="black" lateral_friction="1.0" />
+    <xacro:cylinder_link link_name="wheel-left" radius="${wheel_radius}" length="${wheel_length}" mass="${wheel_mass}" color="black" lateral_friction="1.0" />
     <!-- Ball links -->
-    <xacro:cylinder_link link_name="stick-front" radius="${stick_radius}" length="${stick_length}" mass="${stick_mass}" color="black" />
-    <xacro:cylinder_link link_name="stick-back" radius="${stick_radius}" length="${stick_length}" mass="${stick_mass}" color="black" />
+    <xacro:cylinder_link link_name="stick-front" radius="${stick_radius}" length="${stick_length}" mass="${stick_mass}" color="blue" lateral_friction="0" />
+    <xacro:cylinder_link link_name="stick-back" radius="${stick_radius}" length="${stick_length}" mass="${stick_mass}" color="black" lateral_friction="0" />
     <xacro:sphere_link link_name="ball-front" radius="${ball_radius}" mass="${ball_mass}" color="red" />
     <xacro:sphere_link link_name="ball-back" radius="${ball_radius}" mass="${ball_mass}" color="red" />
 
@@ -184,8 +186,8 @@
     <xacro:wheel_joint name="wheel-motor-right" parent="motor-right" child="wheel-right" xyz="0 0 ${motor_length/2 + wheel_length/2}"/>
     <xacro:wheel_joint name="wheel-motor-left" parent="motor-left" child="wheel-left" xyz="0 0 ${-(motor_length/2 + wheel_length/2)}"/>
     <!-- Ball joints -->
-    <xacro:static_joint name="stick-front-base" parent="base_link" child="stick-front" xyz="${chassis_length/2 - stick_offset} 0 ${-stick_length/2}" rpy="0 0 0" />
-    <xacro:static_joint name="stick-back-base" parent="base_link" child="stick-back" xyz="${-(chassis_length/2 - stick_offset)} 0 ${-stick_length/2s}" rpy="0 0 0" />
+    <xacro:static_joint name="stick-back-base" parent="base_link" child="stick-back" xyz="${chassis_length/2 - stick_offset} 0 ${-stick_length/2}" rpy="0 0 0" />
+    <xacro:static_joint name="stick-front-base" parent="base_link" child="stick-front" xyz="${-(chassis_length/2 - stick_offset)} 0 ${-stick_length/2s}" rpy="0 0 0" />
     <xacro:sphere_joint name="ball-front-joint" parent="base_link" child="ball-front" xyz="${chassis_length/2 - stick_offset} 0 ${-chassis_depth - wheel_radius + ball_radius/2}" />
     <xacro:sphere_joint name="ball-back-joint" parent="base_link" child="ball-back" xyz="${-(chassis_length/2 - stick_offset)} 0 ${-chassis_depth - wheel_radius + ball_radius/2}" />
     

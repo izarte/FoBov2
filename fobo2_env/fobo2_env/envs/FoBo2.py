@@ -170,6 +170,7 @@ class FoBo2Env(gym.Env):
         terminated, truncated = self._get_end_episode()
         if truncated:
             reward = -100
+        # This means target achieved by maximum points (at the correct distance and centered on the camera).
         if terminated and reward == 8.0:
             reward = 10000
         info = self._get_info()
@@ -237,8 +238,7 @@ class FoBo2Env(gym.Env):
         scaled_action[1] = (
             norm_action[1] * self.boundings["wheels_speed"][norm_action[1] > 0]
         )
-        scaled_action[0] = scaled_action[0] if norm_action[1] > 0 else -scaled_action[0]
-
+        scaled_action[1] = scaled_action[1] if norm_action[1] > 0 else -scaled_action[1]
         return scaled_action
 
     # TODO get current environment information

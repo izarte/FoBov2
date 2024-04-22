@@ -1,25 +1,5 @@
 version: "3.0"
 services:
-  train-fobo:
-    container_name: train-fobo
-    image: inigo183/train-fobo:latest
-    volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix
-      - /home/izarate/datos:/usr/src/data
-      - /home/izarate/train_fobo.py:/usr/src/train_fobo.py
-      - /home/izarate/fobo2_env:/usr/src/fobo2_env
-    environment:
-      - TRAIN_MODE=DIRECT
-      - SAVE_MODEL_PATH=/usr/src/data
-      - USED_GPU=3
-    privileged: true
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
   train-hyperparameters-fobo:
     container_name: train-hyperparameters-fobo
     image: inigo183/train-fobo:latest
@@ -34,6 +14,7 @@ services:
       - TRAIN_MODE=DIRECT
       - SAVE_MODEL_PATH=/usr/src/data
       - USED_GPU=2
+    user: "${UID}:${GID}"
     privileged: true
     deploy:
       resources:
@@ -42,3 +23,4 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
+

@@ -30,9 +30,7 @@ class ObservationManager:
     def get_observations(self) -> dict:
         obs = {}
         for key in self.observations:
-            obs[key] = np.array(
-                list(self.observations[key].queue), dtype=self.dtypes[key]
-            )
+            obs[key] = np.array(self.observations[key].queue, dtype=self.dtypes[key])
             if key == "wheels_speed" or key == "human_pixel":
                 obs[key] = obs[key].flatten()
         return obs

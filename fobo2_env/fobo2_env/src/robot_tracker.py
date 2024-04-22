@@ -29,6 +29,6 @@ class RobotTracker:
 
         # Calculate standard deviation of distances
         std_dev = np.std(distances)
-        print("Standard Deviation of Distances:", std_dev)
+        # print("Standard Deviation of Distances:", std_dev)
 
         return std_dev < 0.01
