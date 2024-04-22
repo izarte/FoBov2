@@ -11,6 +11,7 @@ class World:
         self.world_type = "room"
         self.min_values = (0, 0)
         self.max_values = (0, 0)
+        self.max_distance = 0
 
     def create_basic_room(self, x: float = 0, y: float = 0):
         self.world_type = "room"
@@ -18,8 +19,14 @@ class World:
             p.getQuaternionFromEuler([0, 0, 0]),
             p.getQuaternionFromEuler([0, 0, np.radians(90)]),
         ]
-        wall_positions = [[-20, 0, 0], [0, -20, 0], [20, 0, 0], [0, 20, 0]]
-
+        wall_length = 20
+        wall_positions = [
+            [-wall_length, 0, 0],
+            [0, -wall_length, 0],
+            [wall_length, 0, 0],
+            [0, wall_length, 0],
+        ]
+        self.max_distance = np.sqrt(2 * wall_length**2)
         # Get min values for x y coordinates
         self.min_values = tuple(min(col) for col in zip(*wall_positions))
         # Get max values for for x y coordinates

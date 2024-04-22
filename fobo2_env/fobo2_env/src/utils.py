@@ -16,15 +16,6 @@ def random_pos_orientation(area):
     return startPos, startOrientation
 
 
-def distance_in_range(distance: float, desired_distance: float, offset: float) -> bool:
-    difference = distance - desired_distance
-    if difference > 0 and difference <= offset:
-        return True
-    if difference < 0 and difference <= -offset:
-        return True
-    return False
-
-
 def get_human_robot_distance(client_id: int, robot_id: int, human_id: int) -> float:
     robot_position, _ = p.getBasePositionAndOrientation(
         physicsClientId=client_id, bodyUniqueId=robot_id
@@ -83,21 +74,10 @@ def get_human_coordinates(rgb):
     return centroid
 
 
-# Function to add a value to the queue
-def add_to_queue(queue, value):
-    if queue.full():
-        queue.get()
-    queue.put(value)
-
-
-def get_images_as_array(queue):
-    images_list = list(queue.queue)
-    images_array = np.stack(images_list, axis=-1)
-    return images_array
-
-
-def calculate_linear_score(max_score, min_score, max_value, min_value, value) -> float:
-    m = (max_score - min_score) / (max_value - min_value)
-    b = max_score + (m * max_value)
-    score = value * m + b
-    return score
+def value_in_range(value: int, center: int, offset: int):
+    difference = value - center
+    if difference > 0 and difference <= offset:
+        return True
+    if difference < 0 and difference <= -offset:
+        return True
+    return False

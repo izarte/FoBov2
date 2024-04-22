@@ -1,6 +1,4 @@
 import os
-import cv2
-
 import numpy as np
 import pybullet as p
 
@@ -61,23 +59,6 @@ class Robot:
                 nearVal=self.params["near"],
                 farVal=self.params["far"],
             )
-            # images = p.getCameraImage(
-            #     physicsClientId = self.client_id,
-            #     width = self.params["width"],
-            #     height = self.params["height"],
-            #     viewMatrix = view_matrix,
-            #     projectionMatrix = projection_matrix,
-            #     shadow=True,
-            #     renderer=p.ER_BULLET_HARDWARE_OPENGL,
-            #     flags=p.ER_NO_SEGMENTATION_MASK
-            # )
-            # if self.mode == 'rgb':
-            #     image = np.reshape(images[2], (self.params["height"], self.params["width"], 4)) * 1. / 255.
-            # elif self.mode == 'depth':
-            #     depth_buffer_opengl = np.reshape(images[3], [self.params["width"], self.params["height"]])
-            #     far = self.params["far"]
-            #     near = self.params["near"]
-            #     image = far * near / (far - (far - near) * depth_buffer_opengl)
 
             if self.mode == "rgb":
                 _, _, rgb, _, _ = p.getCameraImage(
@@ -94,8 +75,6 @@ class Robot:
                 rgb = rgb[:, :, :3]
                 image = rgb
                 image = image.astype(np.uint8)
-                cv2.imshow("image", image)
-                cv2.waitKey(1)
             elif self.mode == "depth":
                 _, _, _, depth, _ = p.getCameraImage(
                     physicsClientId=self.client_id,
@@ -183,33 +162,9 @@ class Robot:
         )
         self.depth_camera.reset(robot_start_pos)
         self.rgb_camera.reset(robot_start_pos)
-        print(f"client ID: {self.client_id} robot ID: {self.id}")
-        for i in range(
-            p.getNumJoints(physicsClientId=self.client_id, bodyUniqueId=self.id)
-        ):
-            print(
-                p.getJointInfo(
-                    physicsClientId=self.client_id, bodyUniqueId=self.id, jointIndex=i
-                )
-            )
         self.move([0, 0])
 
     def move(self, action):
-        print("action: ", action)
-        print(self.right_wheel)
-        print(self.left_wheel)
-        print(f"client ID: {self.client_id} robot ID: {self.id}")
-        print(p.getNumJoints(physicsClientId=self.client_id, bodyUniqueId=self.id))
-        for i in range(
-            p.getNumJoints(physicsClientId=self.client_id, bodyUniqueId=self.id)
-        ):
-            print(
-                p.getJointInfo(
-                    physicsClientId=self.client_id,
-                    bodyUniqueId=self.id,
-                    jointIndex=i,
-                )
-            )
         # Right wheel
         p.setJointMotorControl2(
             physicsClientId=self.client_id,

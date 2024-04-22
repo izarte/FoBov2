@@ -5,7 +5,7 @@ import numpy as np
 from fobo2_env.src.utils import (
     random_pos_orientation,
     rotate_by_yaw,
-    distance_in_range,
+    value_in_range,
 )
 from fobo2_env.src.walking_simulation_utils import (
     get_walking_sim_uniform_joints_positions,
@@ -144,7 +144,7 @@ class Human:
             )
         )
         print(distance)
-        return distance_in_range(distance, 0.1, 0.05)
+        return value_in_range(value=distance, center=0.1, offset=0.05)
 
     def generate_new_target(self, position):
         # Get new random position for target
