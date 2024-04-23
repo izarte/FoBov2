@@ -215,8 +215,6 @@ class FoBo2Env(gym.Env):
         return terminated, truncated
 
     def _get_observation(self):
-        import os
-
         rgb, depth = self._robot.get_images()
         x, y = get_human_coordinates(rgb)
         speedL, speedR = self._robot.get_motor_speeds()
@@ -229,6 +227,7 @@ class FoBo2Env(gym.Env):
 
         self.observation_manager.add(obs)
         observations = self.observation_manager.get_observations()
+
         return observations
 
     def _scale_action(self, norm_action):

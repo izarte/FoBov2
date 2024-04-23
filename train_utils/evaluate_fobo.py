@@ -27,7 +27,14 @@ parser.add_argument(
     default="trained_models",
     help="Directory containing .zip model files",
 )
+parser.add_argument(
+    "-n",
+    "--model_name",
+    type=str,
+    help="Directory containing .zip model files",
+)
 args = parser.parse_args()
+
 
 
 env_kwargs = {
@@ -46,8 +53,16 @@ env = make_vec_env(
 print("Observation space:", env.observation_space)
 print("Action space:", env.action_space)
 
-zip_files = glob.glob(os.path.join(args.model_dir, "*.zip"))
-for trained_model in zip_files:
+if args.model_name:
+    # Check if the specified model file exists in the directory
+    model_path = os.path.join(args.model_dir, args.model_name)
+    if not os.path.isfile(model_path):
+        print(f"Model file {args.model_name} not found in the directory.")
+        exit(1)
+    models = [model_path]
+else:
+    models = glob.glob(os.path.join(args.model_dir, "*.zip"))
+for trained_model in models:
     env.reset()
     print("evaluating", trained_model)
     model = SAC.load(trained_model, env=env)

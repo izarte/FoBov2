@@ -53,22 +53,21 @@ def train(mode, save_path, model_type):
     # Save a checkpoint every 1000 steps
     checkpoint_callback = CheckpointCallback(
         save_freq=100000,
-        save_path=save_path + "/logs/",
+        save_path=save_path + "/checkpoints/",
         name_prefix=MODEL_NAME,
         save_replay_buffer=True,
         save_vecnormalize=True,
     )
 
     env_kwargs = {"render_mode": mode, "memory": 8}
-    log_dir = save_path + "/checkpoints/"
+    log_dir = save_path + "/logs/"
 
     model_name = MODEL_NAME + "_" + model_type
     if model_type == "sac":
         with open("hyperparameters/sac_hyperparameters.json", "r") as file:
             data = json.load(file)
         # # n_envs = data["Best_trial"]["n_envs"]
-        n_envs = 1
-        env_kwargs = {"render_mode": mode}
+        n_envs = 8
         env_kwargs.update(data["Best_trial"]["env"])
         print(env_kwargs)
         vec_env = make_vec_env(
@@ -81,11 +80,10 @@ def train(mode, save_path, model_type):
         )
         kwargs = {"policy": "MultiInputPolicy", "env": vec_env}
         # kwargs.update(data["Best_trial"]["Params"])
-        # print(kwargs)
         c_kwargs = {
-            "buffer_size": 1000,
+            "buffer_size": 100000,
             "ent_coef": "auto",
-            "train_freq": 3,
+            "train_freq": 4,
             "seed": 37,
             "batch_size": 256,
         }
@@ -116,10 +114,15 @@ def train(mode, save_path, model_type):
 
         print(model.policy)
 
-    hyperparameters = {"model": kwargs, "environment": env_kwargs}
+    filtered_kwargs = {key: value for key, value in kwargs.items() if key != "env"}
+    hyperparameters = {
+        "model": filtered_kwargs,
+        "environment": env_kwargs,
+    }
+    print(hyperparameters)
     with open(save_path + "/" + "hyperparametrs.json", "w") as f:
         json.dump(hyperparameters, f, indent=4)
-    # print(model.policy_loss, model.entropy_loss, model.value_loss)
+    print(model.policy)
     model.learn(600000, callback=checkpoint_callback)
 
     model.save(save_path + "/" + model_name)
