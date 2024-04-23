@@ -54,7 +54,7 @@ class FoBo2Env(gym.Env):
             memory=memory, boundings=self.boundings, dtypes=self.dtypes
         )
         # Observation space are input variables for system
-        # All values are normalized except to depth image due to auto normalizacion in cnn
+        # All values are normalized in observation manager
         self.observation_space = spaces.Dict(
             {
                 "wheels_speed": spaces.Box(
@@ -71,7 +71,7 @@ class FoBo2Env(gym.Env):
                 ),
                 "depth_image": spaces.Box(
                     low=0,
-                    high=255,
+                    high=1,
                     shape=(memory, depth_width, depth_height),
                     dtype=self.dtypes["depth_image"],
                 ),
@@ -215,6 +215,8 @@ class FoBo2Env(gym.Env):
         return terminated, truncated
 
     def _get_observation(self):
+        import os
+
         rgb, depth = self._robot.get_images()
         x, y = get_human_coordinates(rgb)
         speedL, speedR = self._robot.get_motor_speeds()

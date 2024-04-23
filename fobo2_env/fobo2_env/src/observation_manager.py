@@ -23,8 +23,7 @@ class ObservationManager:
         for key in obs:
             if self.observations[key].full():
                 self.observations[key].get()
-            if key == "wheels_speed" or key == "human_pixel":
-                obs[key] = self.normalize(obs[key], key)
+            obs[key] = self.normalize(obs[key], key)
             self.observations[key].put(obs[key])
 
     def get_observations(self) -> dict:
@@ -36,7 +35,7 @@ class ObservationManager:
         return obs
 
     def normalize(self, values: list, key: str):
-        if values[0] == -1 and values[1] == -1:
+        if key != "depth_image" and values[0] == -1 and values[1] == -1:
             return values
         values = (values - self.boundings[key][0]) / (
             self.boundings[key][1] - self.boundings[key][0]

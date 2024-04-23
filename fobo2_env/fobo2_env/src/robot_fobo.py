@@ -151,7 +151,7 @@ class Robot:
 
     def reset(self, starting_area):
         robot_start_pos, robot_start_orientation = random_pos_orientation(
-            (starting_area[0], starting_area[1], 0.4)
+            (starting_area[0], starting_area[1], 0.3)
         )
         self.id = p.loadURDF(
             physicsClientId=self.client_id,
