@@ -1,0 +1,17 @@
+Number of finished trials: 4
+Best trial:
+  Value: -inf
+  Params: 
+    gamma: 0.98
+    learning_rate: 0.32914326864659793
+    batch_size: 32
+    buffer_size: 1000000
+    learning_starts: 20000
+    train_freq: 4
+    tau: 0.02
+    log_std_init: -3.1168823402583183
+    net_arch: medium
+    memory: 4
+    rgb_size: 512
+    depth_size: 128
+    n_envs: 64
