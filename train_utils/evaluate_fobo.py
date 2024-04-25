@@ -36,10 +36,9 @@ parser.add_argument(
 args = parser.parse_args()
 
 
-
 env_kwargs = {
     "render_mode": args.render_mode,  # Use the command line argument
-    "memory": 4,
+    "memory": 6,
     "depth_width": 128,
     "depth_height": 128,
 }

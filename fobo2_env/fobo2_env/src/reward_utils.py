@@ -17,7 +17,7 @@ def calculate_distance_reward(
 
     # Exponential continuous reward
     reward = calculate_exponential_score(
-        max_score=3, value=distance, desired_value=desired_distance
+        max_score=1, value=distance, desired_value=desired_distance
     )
 
     # linear continuous reward
@@ -58,7 +58,7 @@ def calculate_pixel_reward(
         center=center_point,
         offset=offset,
     ):
-        return 3.0
+        return 5.0
 
     # Exponential continuous reward
     reward = calculate_exponential_score(

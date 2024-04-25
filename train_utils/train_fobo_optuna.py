@@ -82,32 +82,48 @@ def objective(trial: optuna.Trial) -> float:
     env_kwargs = {"render_mode": "DIRECT"}
     env_kwargs.update(new_env_kwargs)
     log_dir = save_path + "/logs/"
-    vec_env = make_vec_env(
-        DEFAULT_HYPERPARAMS["env"],
-        n_envs=n_envs,
-        monitor_dir=log_dir,
-        env_kwargs=env_kwargs,
-        vec_env_cls=SubprocVecEnv,
-    )
+    logging.info(f"Experiment created with params: {kwargs} {env_kwargs}")
+
+    oversize = False
+    try:
+        vec_env = make_vec_env(
+            DEFAULT_HYPERPARAMS["env"],
+            n_envs=n_envs,
+            monitor_dir=log_dir,
+            env_kwargs=env_kwargs,
+            vec_env_cls=SubprocVecEnv,
+        )
+    except Exception as e:
+        print(e)
+        logging.info(e + "\n")
+        oversize = True
+    if oversize:
+        return float("nan")
 
     eval_env = Monitor(vec_env)
-
-    eval_callback = TrialEvalCallback(
-        eval_env,
-        trial,
-        n_eval_episodes=N_EVAL_EPISODES,
-        eval_freq=EVAL_FREQ,
-        deterministic=True,
-    )
+    try:
+        eval_callback = TrialEvalCallback(
+            eval_env,
+            trial,
+            n_eval_episodes=N_EVAL_EPISODES,
+            eval_freq=EVAL_FREQ,
+            deterministic=True,
+        )
+    except Exception as e:
+        print(e)
+        logging.info(e + "\n")
+        oversize = True
+    if oversize:
+        return float("nan")
 
     kwargs["env"] = vec_env
     # Create the RL model.
-    oversize = False
     try:
         # model = A2C(**kwargs)
         model = SAC(**kwargs)
     except Exception as e:
         print(e)
+        logging.info(e + "\n")
         oversize = True
     if oversize:
         return float("nan")
@@ -120,6 +136,7 @@ def objective(trial: optuna.Trial) -> float:
     except Exception as e:
         # Sometimes, random hyperparams can generate NaN.
         print(e)
+        logging.info(e + "\n")
         nan_encountered = True
     finally:
         # Free memory.
@@ -132,7 +149,8 @@ def objective(trial: optuna.Trial) -> float:
 
     if eval_callback.is_pruned:
         raise optuna.exceptions.TrialPruned()
-
+    # logging.basicConfig(filename="", level=logging.INFO)
+    logging.info(f"Experiment resulted with {eval_callback.last_mean_reward}\n")
     return eval_callback.last_mean_reward
 
 
@@ -144,6 +162,8 @@ def train_optuna(gpu, mode, save_path):
             pass
     logging.basicConfig(filename=log_file, level=logging.INFO)
     torch.cuda.set_device(gpu)
+    device = torch.cuda.current_device() if torch.cuda.is_available() else "CPU"
+    print("PyTorch is using device:", device)
     sampler = TPESampler(n_startup_trials=N_STARTUP_TRIALS)
     # Do not prune before 1/3 of the max budget is used.
     pruner = MedianPruner(
@@ -152,7 +172,7 @@ def train_optuna(gpu, mode, save_path):
 
     study = optuna.create_study(sampler=sampler, pruner=pruner, direction="maximize")
     try:
-        study.optimize(objective, n_trials=N_TRIALS, timeout=600)
+        study.optimize(objective, n_trials=N_TRIALS, timeout=60000)
     except KeyboardInterrupt:
         pass
 

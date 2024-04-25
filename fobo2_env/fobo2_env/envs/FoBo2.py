@@ -39,6 +39,7 @@ class FoBo2Env(gym.Env):
         self.start_scoring_offset = 3
         self.max_track = 500
         self.start_terminated_check = 1000
+        self.max_steps = 10000
 
         self.boundings = {
             "wheels_speed": [-35, 35],
@@ -141,7 +142,10 @@ class FoBo2Env(gym.Env):
             )
 
         self._robot_tracker = RobotTracker(
-            client_id=self._client_id, robot_id=self._robot.id, max_track=self.max_track
+            client_id=self._client_id,
+            robot_id=self._robot.id,
+            human_id=self._human.id,
+            max_track=self.max_track,
         )
 
         # Reset observation space and fill it with first values
@@ -209,7 +213,11 @@ class FoBo2Env(gym.Env):
         truncated = False
         terminated = False
         if self._steps > self.start_terminated_check:
-            terminated = self._robot_tracker.check_proximity()
+            terminated = self._robot_tracker.check_proximity(
+                desired_distance=self.desired_distance, offset=self.offset
+            )
+        if self._steps > self.max_steps:
+            terminated = True
         if self.collision_detector.in_collision(margin=0.0):
             truncated = True
         return terminated, truncated
