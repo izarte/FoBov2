@@ -38,9 +38,11 @@ args = parser.parse_args()
 
 env_kwargs = {
     "render_mode": args.render_mode,  # Use the command line argument
-    "memory": 6,
-    "depth_width": 128,
-    "depth_height": 128,
+    "memory": 4,
+    "rgb_width": 128,
+    "rgb_height": 128,
+    "depth_width": 320,
+    "depth_height": 320,
 }
 
 env = make_vec_env(

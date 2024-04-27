@@ -1,4 +1,8 @@
-from hyperparameters_samples import sample_a2c_params, sample_sac_params
+from hyperparameters_samples import (
+    sample_a2c_params,
+    sample_sac_params,
+    sample_ppo_lstm_params,
+)
 
 from typing import Any
 from typing import Dict
@@ -77,7 +81,8 @@ def objective(trial: optuna.Trial) -> float:
     kwargs = DEFAULT_HYPERPARAMS.copy()
     # Sample hyperparameters.
     # new_kwargs, new_env_kwargs, n_envs = sample_a2c_params(trial)
-    new_kwargs, new_env_kwargs, n_envs = sample_sac_params(trial)
+    # new_kwargs, new_env_kwargs, n_envs = sample_sac_params(trial)
+    new_kwargs, new_env_kwargs, n_envs = sample_ppo_lstm_params(trial)
     kwargs.update(new_kwargs)
     env_kwargs = {"render_mode": "DIRECT"}
     env_kwargs.update(new_env_kwargs)
@@ -120,7 +125,8 @@ def objective(trial: optuna.Trial) -> float:
     # Create the RL model.
     try:
         # model = A2C(**kwargs)
-        model = SAC(**kwargs)
+        # model = SAC(**kwargs)
+        model = PPO(**kwargs)
     except Exception as e:
         print(e)
         logging.info(e + "\n")

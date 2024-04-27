@@ -90,16 +90,6 @@ def train(mode, save_path, model_type):
         }
         kwargs.update(c_kwargs)
 
-        # model = SAC(
-        #     "MultiInputPolicy",
-        #     vec_env,
-        #     verbose=1,
-        #     buffer_size=10000,
-        #     ent_coef="auto",
-        #     train_freq=3,
-        #     seed=37,
-        #     batch_size=256,
-        # )
         model = SAC(**kwargs)
 
     elif model_type == "a2c":
@@ -114,6 +104,36 @@ def train(mode, save_path, model_type):
         )
 
         print(model.policy)
+    elif model_type == "ppo":
+        try:
+            with open("hyperparameters/ppo_hyperparameters.json", "r") as file:
+                data = json.load(file)
+        except Exception as e:
+            print(f"File not found {e}")
+        # # n_envs = data["Best_trial"]["n_envs"]
+        n_envs = 6
+        env_kwargs.update(data["Best_trial"]["env"])
+        print(env_kwargs)
+        vec_env = make_vec_env(
+            "fobo2_env/FoBo2-v0",
+            n_envs=n_envs,
+            monitor_dir=log_dir,
+            # monitor_kwargs=monitor_kwargs,
+            env_kwargs=env_kwargs,
+            vec_env_cls=SubprocVecEnv,
+        )
+        kwargs = {"policy": "MultiInputPolicy", "env": vec_env}
+        # kwargs.update(data["Best_trial"]["Params"])
+        c_kwargs = {
+            "buffer_size": 10000,
+            "ent_coef": "auto",
+            "train_freq": 4,
+            "seed": 37,
+            "batch_size": 256,
+        }
+        kwargs.update(c_kwargs)
+
+        model = PPO(**kwargs)
 
     filtered_kwargs = {key: value for key, value in kwargs.items() if key != "env"}
     hyperparameters = {
