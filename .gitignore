@@ -4,3 +4,5 @@ yolov8n_saved_model/
 *.tflite
 *.onnx
 *.pt
+__pycache__/
+*.zip

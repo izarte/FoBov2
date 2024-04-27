@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+fobo2_env.egg-info/
+dist/
