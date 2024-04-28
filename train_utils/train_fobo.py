@@ -27,7 +27,7 @@ def main():
     try:
         save_path = Path(os.environ["SAVE_MODEL_PATH"])
     except:  # noqa: E722
-        save_path = ""
+        save_path = Path("")
     try:
         model_type = os.environ["MODEL_TYPE"]
     except:  # noqa: E722
