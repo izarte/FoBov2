@@ -125,9 +125,8 @@ def train(mode, save_path, model_type):
         kwargs = {"policy": "MultiInputPolicy", "env": vec_env}
         # kwargs.update(data["Best_trial"]["Params"])
         c_kwargs = {
-            "buffer_size": 10000,
-            "ent_coef": "auto",
-            "train_freq": 4,
+            "ent_coef": 0.1,
+            "n_steps": 4,
             "seed": 37,
             "batch_size": 256,
         }
