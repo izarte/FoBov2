@@ -53,6 +53,9 @@ def calculate_pixel_reward(
     center_point = 0.5
     reward = 0.0
 
+    if x == -1:
+        return reward
+
     if value_in_range(
         value=x,
         center=center_point,

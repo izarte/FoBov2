@@ -1,5 +1,5 @@
 import argparse
-from stable_baselines3 import SAC
+from stable_baselines3 import SAC, PPO
 import gymnasium as gym
 import glob
 import os
@@ -38,7 +38,7 @@ args = parser.parse_args()
 
 env_kwargs = {
     "render_mode": args.render_mode,  # Use the command line argument
-    "memory": 4,
+    "memory": 6,
     "rgb_width": 128,
     "rgb_height": 128,
     "depth_width": 320,
@@ -66,6 +66,7 @@ else:
 for trained_model in models:
     env.reset()
     print("evaluating", trained_model)
+    # model = PPO.load(trained_model, env=env)
     model = SAC.load(trained_model, env=env)
     mean_reward, std_reward = evaluate_policy(
         model, model.get_env(), n_eval_episodes=10

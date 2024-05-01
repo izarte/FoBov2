@@ -80,9 +80,7 @@ class FoBo2Env(gym.Env):
             }
         )
         # Action space, 2 real values for each motor speed
-        self.action_space = spaces.Box(
-            low=np.array([-1, -1]), high=np.array([1, 1]), dtype=np.float32
-        )
+        self.action_space = spaces.Box(low=-1, high=1, shape=(2,), dtype=np.float32)
 
         # Set render mode and initialize pybullet client
         if render_mode == "DIRECT":
@@ -165,6 +163,7 @@ class FoBo2Env(gym.Env):
         return observation, info
 
     def step(self, action):
+        # print(action)
         p.stepSimulation(physicsClientId=self._client_id)
         self._human_walk()
         scaled_action = self._scale_action(action)
@@ -206,6 +205,8 @@ class FoBo2Env(gym.Env):
         reward_based_ond_pixel = calculate_pixel_reward(
             x=self.observation_manager.get_x(), offset=0.1
         )
+        # reward = 0
+        # if reward_based_on_distance > 0:
         reward = reward_based_on_distance + reward_based_ond_pixel
         return reward
 

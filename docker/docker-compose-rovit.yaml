@@ -1,0 +1,68 @@
+version: "3.0"
+services:
+  # train-fobo-sac:
+  #   container_name: train-fobo-sac
+  #   image: inigo183/train-fobo:latest
+  #   volumes:
+  #     - /tmp/.X11-unix:/tmp/.X11-unix
+  #     - /home/izarate/datos:/usr/src/data
+  #     - /home/izarate/train_utils/train_fobo.py:/usr/src/train_fobo.py
+  #     - /home/izarate/train_utils/hyperparameters:/usr/src/hyperparameters
+  #     - /home/izarate/fobo2_env:/usr/src/fobo2_env
+  #   environment:
+  #     - TRAIN_MODE=DIRECT
+  #     - SAVE_MODEL_PATH=/usr/src/data
+  #     - MODEL_TYPE=sac
+  #     - USED_GPU=0
+  #   privileged: true
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #         - driver: nvidia
+  #           device_ids: ['0', '1', '2', '3']
+  #           capabilities: [gpu]
+  train-fobo-ppo-2:
+    container_name: train-fobo-ppo-2
+    image: inigo183/train-fobo:latest
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - /home/izarate/datos:/usr/src/data
+      - /home/izarate/train_utils/train_fobo.py:/usr/src/train_fobo.py
+      - /home/izarate/train_utils/hyperparameters:/usr/src/hyperparameters
+      - /home/izarate/fobo2_env:/usr/src/fobo2_env
+    environment:
+      - TRAIN_MODE=DIRECT
+      - SAVE_MODEL_PATH=/usr/src/data
+      - MODEL_TYPE=ppo
+      - USED_GPU=1
+    privileged: true
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            device_ids: ['0', '1', '2', '3']
+            capabilities: [gpu]
+  # train-hyperparameters-fobo:
+  #   container_name: train-hyperparameters-fobo
+  #   image: inigo183/train-fobo:latest
+  #   volumes:
+  #     - /tmp/.X11-unix:/tmp/.X11-unix
+  #     - /home/izarate/datos:/usr/src/data
+  #     - /home/izarate/train_utils/train_fobo_optuna.py:/usr/src/train_fobo.py
+  #     - /home/izarate/train_utils/hyperparameters_samples.py:/usr/src/hyperparameters_samples.py
+  #     - /home/izarate/fobo2_env:/usr/src/fobo2_env
+  #   environment:
+  #     - TRAIN_MODE=DIRECT
+  #     - SAVE_MODEL_PATH=/usr/src/data
+  #     - MODEL_TYPE=sac
+  #     - USED_GPU=0
+  #   privileged: true
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             device_ids: ['0', '1', '2', '3']
+  #             capabilities: [gpu]

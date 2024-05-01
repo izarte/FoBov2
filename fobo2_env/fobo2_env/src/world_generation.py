@@ -19,7 +19,7 @@ class World:
             p.getQuaternionFromEuler([0, 0, 0]),
             p.getQuaternionFromEuler([0, 0, np.radians(90)]),
         ]
-        wall_length = 20
+        wall_length = 15
         wall_positions = [
             [-wall_length, 0, 0],
             [0, -wall_length, 0],

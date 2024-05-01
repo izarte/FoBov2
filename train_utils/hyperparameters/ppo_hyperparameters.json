@@ -13,11 +13,11 @@
     },
     "env": {
       "memory": 6,
-      "rgb_width": 512,
-      "rgb_height": 512,
+      "rgb_width": 128,
+      "rgb_height": 128,
       "depth_width": 320,
       "depth_height": 320
     },
-    "n_envs": 64
+    "n_envs": 12
   }
 }

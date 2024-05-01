@@ -67,8 +67,8 @@ def train(mode, save_path, model_type):
     if model_type == "sac":
         with open("hyperparameters/sac_hyperparameters.json", "r") as file:
             data = json.load(file)
-        # # n_envs = data["Best_trial"]["n_envs"]
         n_envs = 6
+        n_envs = data["Best_trial"]["n_envs"]
         env_kwargs.update(data["Best_trial"]["env"])
         print(env_kwargs)
         vec_env = make_vec_env(
@@ -82,6 +82,7 @@ def train(mode, save_path, model_type):
         kwargs = {"policy": "MultiInputPolicy", "env": vec_env}
         # kwargs.update(data["Best_trial"]["Params"])
         c_kwargs = {
+            "gamma": 0.98,
             "buffer_size": 10000,
             "ent_coef": "auto",
             "train_freq": 4,
@@ -112,6 +113,7 @@ def train(mode, save_path, model_type):
             print(f"File not found {e}")
         # # n_envs = data["Best_trial"]["n_envs"]
         n_envs = 6
+        n_envs = data["Best_trial"]["n_envs"]
         env_kwargs.update(data["Best_trial"]["env"])
         print(env_kwargs)
         vec_env = make_vec_env(
@@ -125,10 +127,15 @@ def train(mode, save_path, model_type):
         kwargs = {"policy": "MultiInputPolicy", "env": vec_env}
         # kwargs.update(data["Best_trial"]["Params"])
         c_kwargs = {
-            "ent_coef": 0.1,
-            "n_steps": 4,
             "seed": 37,
-            "batch_size": 256,
+            "n_steps": 32,
+            "batch_size": 384,
+            "gae_lambda": 0.8,
+            "gamma": 0.98,
+            "n_epochs": 20,
+            "ent_coef": 0.0,
+            "learning_rate": 0.001,
+            "clip_range": 0.2,
         }
         kwargs.update(c_kwargs)
 
