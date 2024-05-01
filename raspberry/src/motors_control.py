@@ -31,8 +31,6 @@ def main():
 
 
 if __name__ == "__main__":
-    # if connected via serial Pin(RX, TX)
-    ser = serial.Serial(
-        "/dev/ttyS0", 9600, timeout=1
-    )  # 9600 is baud rate(must be same with that of NodeMCU)
+    ser = serial.Serial("/dev/ttyS0", 115200, timeout=1)
     ser.flush()
+    main()
