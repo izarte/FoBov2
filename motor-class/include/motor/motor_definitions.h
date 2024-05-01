@@ -1,0 +1,16 @@
+#ifndef MOTOR_DEFINITIONS_H
+#define MOTOR_DEFINITIONS_H
+
+
+#define FREQ 4000
+#define PWM_RESOLUTION 8
+
+
+#define EXAMPLE_PCNT_HIGH_LIMIT 100
+#define EXAMPLE_PCNT_LOW_LIMIT  -100
+
+#define PULSES_PER_REV 17
+
+
+
+#endif
