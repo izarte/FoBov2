@@ -27,7 +27,7 @@ int i = 1;
 
 // UART managment variables
 std::string message_c_str;
-size_t split_pos
+size_t split_pos;
 int left_speed = 0;
 int right_speed = 0;
 String encoders_speed_str;
@@ -37,23 +37,23 @@ void loop() {
     if (UART2.available()) {
         // Read Rasperry indications
         String speeds_str = UART2.readString();
-        Serial.println("Speeds received: " + message);
+        Serial.println("Speeds received: " + speeds_str);
 
         // transform string to c++ string
-        message_c_str = message.c_str();
+        message_c_str = speeds_str.c_str();
 
         // Find the space separating the two numbers
         split_pos = message_c_str.find(" ");
 
         // Gather speeds from str message to int valyes
-        left_speed = static_cast<int>(std::stof(message_c_str.substr(0, spacePos)) * 100);
-        right_speed = static_cast<int>(std::stof(message_c_str.substr(spacePos + 1)) * 100);
+        left_speed = static_cast<int>(std::stof(message_c_str.substr(0, split_pos)) * 100);
+        right_speed = static_cast<int>(std::stof(message_c_str.substr(split_pos + 1)) * 100);
 
         Serial.println("Left speed: " + String(left_speed));
         Serial.println("Right speed: " + String(right_speed));
 
-        left_motor.set_speed(left_speed)
-        right_motor.set_speed(right_speed)
+        left_motor.set_speed(left_speed);
+        right_motor.set_speed(right_speed);
 
         encoders_speed_str =  String(left_motor.get_speed()) + " " +  String(right_motor.get_speed());
         UART2.println(encoders_speed_str);
