@@ -88,6 +88,8 @@ class FoBo2Env(gym.Env):
         elif render_mode == "GUI":
             self._client_id = p.connect(p.GUI)
 
+        self.human_seen = False
+
         # Create variable placeholders for pybullet objects
         self._planeId = None
         self._human = None
@@ -174,7 +176,7 @@ class FoBo2Env(gym.Env):
         if truncated:
             reward = -100
         # This means target achieved by maximum points (at the correct distance and centered on the camera).
-        if terminated and reward == 8.0:
+        if terminated and reward == 10.0:
             reward = 10000
         info = self._get_info()
         self._steps += 1
@@ -203,7 +205,7 @@ class FoBo2Env(gym.Env):
             offset=self.offset,
         )
         reward_based_ond_pixel = calculate_pixel_reward(
-            x=self.observation_manager.get_x(), offset=0.1
+            x=self.observation_manager.get_x(), offset=0.1, has_seen=self.human_seen
         )
         # reward = 0
         # if reward_based_on_distance > 0:
@@ -226,6 +228,8 @@ class FoBo2Env(gym.Env):
     def _get_observation(self):
         rgb, depth = self._robot.get_images()
         x, y = get_human_coordinates(rgb)
+        if not self.human_seen and x > -1:
+            self.human_seen = True
         speedL, speedR = self._robot.get_motor_speeds()
         observations = {}
         obs = {

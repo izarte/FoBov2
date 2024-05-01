@@ -1,6 +1,7 @@
 from stable_baselines3 import SAC, A2C, PPO
 from stable_baselines3.common.env_util import make_vec_env
 import torch
+import gymnasium as gym 
 import fobo2_env
 import os
 import json
@@ -67,19 +68,20 @@ def train(mode, save_path, model_type):
     if model_type == "sac":
         with open("hyperparameters/sac_hyperparameters.json", "r") as file:
             data = json.load(file)
-        n_envs = 6
+        n_envs = 1
         n_envs = data["Best_trial"]["n_envs"]
         env_kwargs.update(data["Best_trial"]["env"])
         print(env_kwargs)
-        vec_env = make_vec_env(
-            "fobo2_env/FoBo2-v0",
-            n_envs=n_envs,
-            monitor_dir=log_dir,
-            # monitor_kwargs=monitor_kwargs,
-            env_kwargs=env_kwargs,
-            vec_env_cls=SubprocVecEnv,
-        )
-        kwargs = {"policy": "MultiInputPolicy", "env": vec_env}
+        env = gym.make("fobo2_env/FoBo2-v0", **env_kwargs)
+        # vec_env = make_vec_env(
+        #     "fobo2_env/FoBo2-v0",
+        #     n_envs=n_envs,
+        #     monitor_dir=log_dir,
+        #     # monitor_kwargs=monitor_kwargs,
+        #     env_kwargs=env_kwargs,
+        #     vec_env_cls=SubprocVecEnv,
+        # )
+        kwargs = {"policy": "MultiInputPolicy", "env": env}
         # kwargs.update(data["Best_trial"]["Params"])
         c_kwargs = {
             "gamma": 0.98,

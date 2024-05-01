@@ -8,6 +8,9 @@ from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.env_util import make_vec_env
 
 import numpy as np
+import torch
+torch.cuda.empty_cache()
+
 
 # Set up argparse
 parser = argparse.ArgumentParser(
@@ -66,13 +69,14 @@ else:
 for trained_model in models:
     env.reset()
     print("evaluating", trained_model)
+    with torch.no_grad():
     # model = PPO.load(trained_model, env=env)
-    model = SAC.load(trained_model, env=env)
-    mean_reward, std_reward = evaluate_policy(
-        model, model.get_env(), n_eval_episodes=10
-    )
-    print("Mean reward: ", mean_reward)
-    print("Standard reward", std_reward)
+        model = SAC.load(trained_model, env=env, device='cpu')
+        mean_reward, std_reward = evaluate_policy(
+            model, model.get_env(), n_eval_episodes=10
+        )
+        print("Mean reward: ", mean_reward)
+        print("Standard reward", std_reward)
 
 
 # # Enjoy trained agent
