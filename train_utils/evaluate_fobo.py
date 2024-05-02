@@ -36,6 +36,12 @@ parser.add_argument(
     type=str,
     help="Directory containing .zip model files",
 )
+parser.add_argument(
+    "-t",
+    "--model_type",
+    type=str,
+    help="Algorithm used to train model",
+)
 args = parser.parse_args()
 
 
@@ -69,9 +75,23 @@ else:
 for trained_model in models:
     env.reset()
     print("evaluating", trained_model)
+    model_type = args.model_type
+    if not model_type:
+        if "sac" in trained_model:
+             model_type = "sac"
+        elif "ppo" in trained_model:
+            model_type = "ppo"
+        else:
+            raise RuntimeError("No model type found in model name")
+
     with torch.no_grad():
-    # model = PPO.load(trained_model, env=env)
-        model = SAC.load(trained_model, env=env, device='cpu')
+        if model_type == "sac":
+            model = SAC.load(trained_model, env=env, device='cpu')
+        elif model_type == "ppo":
+            model = PPO.load(trained_model, env=env)
+        else:
+            raise RuntimeError("Bad algorithm name given")
+
         mean_reward, std_reward = evaluate_policy(
             model, model.get_env(), n_eval_episodes=10
         )

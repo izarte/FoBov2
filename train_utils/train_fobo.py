@@ -33,7 +33,11 @@ def main():
         model_type = os.environ["MODEL_TYPE"]
     except:  # noqa: E722
         model_type = "sac"
-    save_path = f"{save_path / MODEL_NAME}_{model_type}_0"
+    try:
+        env_version = os.environ["ENV_VERSION"]
+    except:
+        env_version = "0.1.0"
+    save_path = f"{save_path / MODEL_NAME}_{env_version}_{model_type}_0"
     counter = 1
     while os.path.exists(save_path):
         # If the folder exists, append a number to the base name and increment the counter
@@ -47,16 +51,16 @@ def main():
     torch.cuda.set_device(gpu)
     device = torch.cuda.current_device() if torch.cuda.is_available() else "CPU"
     print("PyTorch is using device:", device)
-    train(mode, Path(save_path), model_type)
+    train(mode, Path(save_path), model_type, env_version)
 
 
-def train(mode, save_path, model_type):
+def train(mode, save_path, model_type, env_version):
     # Instantiate the env
     # Save a checkpoint every 1000 steps
     checkpoint_callback = CheckpointCallback(
         save_freq=100000,
         save_path=save_path / "checkpoints",
-        name_prefix=MODEL_NAME,
+        name_prefix=f"{MODEL_NAME}_{model_type}_{env_version}",
         save_replay_buffer=True,
         save_vecnormalize=True,
     )

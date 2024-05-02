@@ -207,9 +207,9 @@ class FoBo2Env(gym.Env):
         reward_based_ond_pixel = calculate_pixel_reward(
             x=self.observation_manager.get_x(), offset=0.1, has_seen=self.human_seen
         )
-        # reward = 0
-        # if reward_based_on_distance > 0:
-        reward = reward_based_on_distance + reward_based_ond_pixel
+        reward = reward_based_ond_pixel
+        if reward_based_on_distance > 0:
+            reward = reward_based_on_distance + reward_based_ond_pixel
         return reward
 
     def _get_end_episode(self):
