@@ -35,13 +35,18 @@ class ObservationManager:
         return obs
 
     def normalize(self, values: list, key: str):
+        r_values = values
         if key != "depth_image" and values[0] == -1 and values[1] == -1:
+            if key == "human_pixel":
+                print(f"Centroid {values} Normalized centroid: ", values)
             return values
         values = (values - self.boundings[key][0]) / (
             self.boundings[key][1] - self.boundings[key][0]
         )
+        if key == "human_pixel":
+            print(f"Centroid {r_values} Normalized centroid: ", values)
         return values
 
     def get_x(self):
         # Get last pixel observation specially x
-        return self.observations["wheels_speed"].queue[-1][0]
+        return self.observations["human_pixel"].queue[-1][0]

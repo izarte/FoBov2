@@ -39,22 +39,37 @@ def main():
         env_version = "0.1.0"
     save_path = f"{save_path / MODEL_NAME}_{env_version}_{model_type}_0"
     counter = 1
-    while os.path.exists(save_path):
-        # If the folder exists, append a number to the base name and increment the counter
-        save_path = save_path[:-1] + str(counter)
-        counter += 1
-    # Create the folder with the unique name
-    os.makedirs(save_path)
-    os.makedirs(save_path + "/logs")
-    os.makedirs(save_path + "/checkpoints")
+    allocating_path = True
+    model_checkpoint = None
+    while allocating_path:
+        if os.path.exists(save_path):
+            files = os.listdir(save_path)
+            # Filter for files that end with '.zip'
+            zip_files = [f for f in files if f.endswith('.zip')]
+            if zip_files:
+                # If the folder exists and prevoius traing was finished, append a number to the base name and increment the counter
+                save_path = save_path[:-1] + str(counter)
+                counter += 1
+            else:
+                allocating_path = False
+                checkpoints = files = os.listdir(save_path + "/checkpoints")
+                checkpoints = [f for f in files if f.endswith('.zip')]
+                if checkpoints:
+                    model_checkpoint = checkpoints[-1]
+        else:
+            # Create the folder with the unique name
+            os.makedirs(save_path)
+            os.makedirs(save_path + "/logs")
+            os.makedirs(save_path + "/checkpoints")
+            allocating_path = False
 
     torch.cuda.set_device(gpu)
     device = torch.cuda.current_device() if torch.cuda.is_available() else "CPU"
     print("PyTorch is using device:", device)
-    train(mode, Path(save_path), model_type, env_version)
+    train(mode, Path(save_path), model_type, env_version, model_checkpoint)
 
 
-def train(mode, save_path, model_type, env_version):
+def train(mode, save_path, model_type, env_version, model_checkpoint):
     # Instantiate the env
     # Save a checkpoint every 1000 steps
     checkpoint_callback = CheckpointCallback(
@@ -96,8 +111,10 @@ def train(mode, save_path, model_type, env_version):
             "batch_size": 256,
         }
         kwargs.update(c_kwargs)
-
-        model = SAC(**kwargs)
+        if model_checkpoint is not None:
+            model = SAC.load(model_checkpoint, env=env)
+        else:
+            model = SAC(**kwargs)
 
     elif model_type == "a2c":
         model = A2C(
@@ -144,8 +161,10 @@ def train(mode, save_path, model_type, env_version):
             "clip_range": 0.2,
         }
         kwargs.update(c_kwargs)
-
-        model = PPO(**kwargs)
+        if model_checkpoint is not None:
+            model = PPO.load(model_checkpoint, env=env)
+        else:
+            model = PPO(**kwargs)
 
     filtered_kwargs = {key: value for key, value in kwargs.items() if key != "env"}
     hyperparameters = {

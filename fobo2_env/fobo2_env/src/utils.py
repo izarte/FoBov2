@@ -74,10 +74,8 @@ def get_human_coordinates(rgb):
     return centroid
 
 
-def value_in_range(value: int, center: int, offset: int):
-    difference = value - center
-    if difference > 0 and difference <= offset:
-        return True
-    if difference < 0 and difference <= -offset:
+def value_in_range(value: float, center: float, offset: float):
+    difference = np.abs(value - center)
+    if difference <= offset:
         return True
     return False

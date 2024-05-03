@@ -71,7 +71,7 @@ class Robot:
                     renderer=p.ER_BULLET_HARDWARE_OPENGL,
                     flags=p.ER_NO_SEGMENTATION_MASK,
                 )
-                # image = np.reshape(rgb, (self.params["height"], self.params["width"], 4))
+                # image = np.reshape(rgb, (self.params["height"], self.params["width"], 3))
                 rgb = rgb[:, :, :3]
                 image = rgb
                 image = image.astype(np.uint8)
@@ -142,8 +142,8 @@ class Robot:
             fov=84,
             near=0.02,
             far=10000,
-            width=self.depth_width,
-            height=self.depth_height,
+            width=self.rgb_width,
+            height=self.rgb_height,
             relative_pose=[0.50, 0, 0.15],
             relative_orientation=[0, 30, 0],
             mode="rgb",

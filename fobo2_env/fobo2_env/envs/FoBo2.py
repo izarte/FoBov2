@@ -88,8 +88,6 @@ class FoBo2Env(gym.Env):
         elif render_mode == "GUI":
             self._client_id = p.connect(p.GUI)
 
-        self.human_seen = False
-
         # Create variable placeholders for pybullet objects
         self._planeId = None
         self._human = None
@@ -97,6 +95,8 @@ class FoBo2Env(gym.Env):
         self._world = None
         self._robot_tracker = None
         self._steps = 0
+
+        self.human_seen = False
 
     def reset(self, seed=None, options=None):
         self._steps = 0
@@ -161,6 +161,8 @@ class FoBo2Env(gym.Env):
         self.collision_detector = pyb_utils.CollisionDetector(
             client_id=self._client_id, collision_pairs=self.relevant_collisions
         )
+        # Variable to punish robot for losing human in camera
+        self.human_seen = False
 
         return observation, info
 
@@ -180,6 +182,7 @@ class FoBo2Env(gym.Env):
             reward = 10000
         info = self._get_info()
         self._steps += 1
+        print("Reward: ", reward)
 
         return observation, reward, terminated, truncated, info
 
@@ -208,7 +211,8 @@ class FoBo2Env(gym.Env):
             x=self.observation_manager.get_x(), offset=0.1, has_seen=self.human_seen
         )
         reward = reward_based_ond_pixel
-        if reward_based_on_distance > 0:
+        print(f"Pixel reward: {reward_based_ond_pixel} Distance Reward: {reward_based_on_distance}")
+        if reward_based_ond_pixel > 0:
             reward = reward_based_on_distance + reward_based_ond_pixel
         return reward
 
