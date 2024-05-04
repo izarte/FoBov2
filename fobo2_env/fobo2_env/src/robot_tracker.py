@@ -76,4 +76,7 @@ class RobotTracker:
         std_dev = np.std(distances)
         # print("Standard Deviation of Distances:", std_dev)
 
-        return std_dev < 0.01 or in_range or self.acc_angle // np.pi > 3
+        loops = np.abs(self.acc_angle // np.pi) 
+        # print("Turns: ", self.acc_angle // np.pi)
+
+        return std_dev < 0.01 or in_range or loops > 3

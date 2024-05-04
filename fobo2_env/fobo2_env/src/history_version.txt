@@ -1,0 +1,11 @@
+0.1.0 -> 
+    -> reward: Only given when human is in pixel, and -5 if human was lost
+        - distance: expoential to 2 with k = 0.2 with logic for closest distance 
+        - pixel: same applied to pixel to 1 with k = 0.2, error with closest logic
+    -> terminated: Track with 500 steps, stop when standard deviation < 0.01 and loops > 3
+
+0.1.1 -> 
+    -> reward: Only given when human was seen in memory, -5 if lost in current and memory, to avoid fake losts
+        - distance: same as 0.1.0
+        - pixel: no closest logic applied and value up to 2 with k = 6
+    -> terminated: Track with 1000 steps, stop with same std deviation as 0.1.0 and abs(loops) > 3

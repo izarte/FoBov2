@@ -152,7 +152,7 @@ def train(mode, save_path, model_type, env_version, model_checkpoint):
         c_kwargs = {
             "seed": 37,
             "n_steps": 32,
-            "batch_size": 384,
+            "batch_size": 256,
             "gae_lambda": 0.8,
             "gamma": 0.98,
             "n_epochs": 20,

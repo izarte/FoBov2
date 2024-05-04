@@ -17,7 +17,7 @@ def calculate_distance_reward(
 
     # Exponential continuous reward
     reward = calculate_exponential_score(
-        max_score=2, value=distance, desired_value=desired_distance, is_distance=True
+        max_score=2, value=distance, desired_value=desired_distance, k = 0.2, is_distance=True
     )
 
     # linear continuous reward
@@ -48,14 +48,13 @@ def calculate_distance_reward(
 
 def calculate_pixel_reward(
     x: float,
+    any_detected: float,
     offset: float,
     has_seen: bool
 ) -> float:
     center_point = 0.5
     reward = 0.0
-
-    print("X value: ", x)
-    if x < 0:
+    if not any_detected:
         return -5.0 if has_seen else reward
 
     if value_in_range(
@@ -63,12 +62,12 @@ def calculate_pixel_reward(
         center=center_point,
         offset=offset,
     ):
-        print("PIXEL IN RANGE")
+        # print("PIXEL IN RANGE")
         return 5.0
 
     # Exponential continuous reward
     reward = calculate_exponential_score(
-        max_score=1, value=x, desired_value=center_point
+        max_score=2, value=x, desired_value=center_point, k=6
     )
 
     # Linear continuous reward
@@ -100,10 +99,9 @@ def calculate_linear_score(max_score, min_score, max_value, min_value, value) ->
     return score
 
 
-def calculate_exponential_score(max_score, value, desired_value, is_distance: bool = False) -> float:
+def calculate_exponential_score(max_score, value, desired_value, k, is_distance = False) -> float:
     delta = np.abs(value - desired_value)
     A = max_score
-    k = 0.2
 
     if is_distance and value < desired_value:
         delta = value

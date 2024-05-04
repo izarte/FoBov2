@@ -37,7 +37,7 @@ class FoBo2Env(gym.Env):
         self.desired_distance = 1.5
         self.offset = 0.2
         self.start_scoring_offset = 3
-        self.max_track = 500
+        self.max_track = 1000
         self.start_terminated_check = 1000
         self.max_steps = 10000
 
@@ -150,8 +150,9 @@ class FoBo2Env(gym.Env):
 
         # Reset observation space and fill it with first values
         self.observation_manager.reset()
-        for _ in range(self.memory):
+        for _ in range(4 * self.memory):
             observation = self._get_observation()
+            p.stepSimulation(physicsClientId=self._client_id)
         info = self._get_info()
 
         self.relevant_collisions = [(self._robot.id, self._human.id)]
@@ -182,7 +183,7 @@ class FoBo2Env(gym.Env):
             reward = 10000
         info = self._get_info()
         self._steps += 1
-        print("Reward: ", reward)
+        # print("Reward: ", reward)
 
         return observation, reward, terminated, truncated, info
 
@@ -207,11 +208,12 @@ class FoBo2Env(gym.Env):
             max_distace=self._world.max_distance,
             offset=self.offset,
         )
+        x, any_detected = self.observation_manager.get_x()
         reward_based_ond_pixel = calculate_pixel_reward(
-            x=self.observation_manager.get_x(), offset=0.1, has_seen=self.human_seen
+            x=x, any_detected=any_detected, offset=0.1, has_seen=self.human_seen
         )
         reward = reward_based_ond_pixel
-        print(f"Pixel reward: {reward_based_ond_pixel} Distance Reward: {reward_based_on_distance}")
+        # print(f"Pixel reward: {reward_based_ond_pixel} Distance Reward: {reward_based_on_distance}")
         if reward_based_ond_pixel > 0:
             reward = reward_based_on_distance + reward_based_ond_pixel
         return reward

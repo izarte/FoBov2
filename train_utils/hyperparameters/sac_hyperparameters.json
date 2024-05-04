@@ -3,7 +3,7 @@
   "Best_trial": {
     "Value": "-inf",
     "Params": {
-      "gamma": 0.98,
+      "gamma": 0.999,
       "learning_rate": 0.32914326864659793,
       "batch_size": 512,
       "buffer_size": 100000,

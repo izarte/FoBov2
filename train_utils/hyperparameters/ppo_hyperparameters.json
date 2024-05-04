@@ -18,6 +18,6 @@
       "depth_width": 320,
       "depth_height": 320
     },
-    "n_envs": 12
+    "n_envs": 8
   }
 }
