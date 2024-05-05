@@ -151,14 +151,15 @@ def train(mode, save_path, model_type, env_version, model_checkpoint):
         # kwargs.update(data["Best_trial"]["Params"])
         c_kwargs = {
             "seed": 37,
-            "n_steps": 32,
-            "batch_size": 256,
-            "gae_lambda": 0.8,
-            "gamma": 0.98,
-            "n_epochs": 20,
-            "ent_coef": 0.0,
+            "n_steps": 8,
+            "batch_size": n_envs * 8,
+            "gae_lambda": 0.9,
+            "gamma": 0.9999,
+            "n_epochs": 2,
+            "ent_coef": 0.00429,
             "learning_rate": 0.001,
             "clip_range": 0.2,
+            "use_sde": True,
         }
         kwargs.update(c_kwargs)
         if model_checkpoint is not None:

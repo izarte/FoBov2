@@ -39,7 +39,7 @@ class FoBo2Env(gym.Env):
         self.start_scoring_offset = 3
         self.max_track = 1000
         self.start_terminated_check = 1000
-        self.max_steps = 10000
+        self.max_steps = 5000
 
         self.boundings = {
             "wheels_speed": [-35, 35],
@@ -101,6 +101,7 @@ class FoBo2Env(gym.Env):
     def reset(self, seed=None, options=None):
         self._steps = 0
         super().reset(seed=seed)
+        np.random.seed(seed)
         # Reset simulation
         p.resetSimulation(self._client_id)
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
@@ -179,7 +180,7 @@ class FoBo2Env(gym.Env):
         if truncated:
             reward = -100
         # This means target achieved by maximum points (at the correct distance and centered on the camera).
-        if terminated and reward == 10.0:
+        if terminated and reward == 8.0:
             reward = 10000
         info = self._get_info()
         self._steps += 1

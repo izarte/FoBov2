@@ -9,3 +9,5 @@
         - distance: same as 0.1.0
         - pixel: no closest logic applied and value up to 2 with k = 6
     -> terminated: Track with 1000 steps, stop with same std deviation as 0.1.0 and abs(loops) > 3
+0.1.2 ->
+    -> reward: max 3 for human pixel, so distance based goal should be more relevant, and punish reduced to -1 to avoid going to wall so 0 > -5
