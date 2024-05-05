@@ -22,10 +22,10 @@ def calculate_exponential_score(max_score, value, desired_value, k, is_distance 
 
 
 def plot_reward_function():
-    x_values = [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 5, 6, 7, 8, 9, 10, 11, 12,13, 14]
+    x_values = [i / 10 for i in range(0, 151)]
     y_values = []
-    for i in [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 5, 6, 7, 8, 9, 10, 11, 12,13, 14]:
-        y = calculate_exponential_score(2, i, 1.5, 0.2, True)
+    for i in x_values:
+        y = calculate_exponential_score(3, i, 1.5, 0.2, True)
         y_values.append(y)
         print(f"for {i} distance, reward = {y}")
 
@@ -64,4 +64,4 @@ def plot_reward_function_px():
 
 if __name__ == "__main__":
     plot_reward_function()
-    plot_reward_function_px()
+    # plot_reward_function_px()

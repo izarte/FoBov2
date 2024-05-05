@@ -17,7 +17,7 @@ def calculate_distance_reward(
 
     # Exponential continuous reward
     reward = calculate_exponential_score(
-        max_score=2, value=distance, desired_value=desired_distance, k = 0.2, is_distance=True
+        max_score=3, value=distance, desired_value=desired_distance, k = 0.2, is_distance=True
     )
 
     # linear continuous reward
@@ -55,7 +55,7 @@ def calculate_pixel_reward(
     center_point = 0.5
     reward = 0.0
     if not any_detected:
-        return -1.0 if has_seen else reward
+        return 0.0 if has_seen else reward
 
     if value_in_range(
         value=x,
