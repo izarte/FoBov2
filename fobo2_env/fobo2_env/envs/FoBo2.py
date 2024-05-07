@@ -34,12 +34,12 @@ class FoBo2Env(gym.Env):
         self.rgb_height = rgb_height
 
         # Define constant values
-        self.desired_distance = 1.5
-        self.offset = 0.2
+        self.desired_distance = 3
+        self.offset = 0.5
         self.start_scoring_offset = 3
         self.max_track = 1000
         self.start_terminated_check = 1000
-        self.max_steps = 5000
+        self.max_steps = 3000
 
         self.boundings = {
             "wheels_speed": [-35, 35],
@@ -117,11 +117,13 @@ class FoBo2Env(gym.Env):
         self._world.create_basic_room()
 
         # Get spawning zone for robot and human percentage
-        robot_area, human_area = self._world.calculate_starting_areas(area1=1, area2=1)
+        # robot_area, human_area = self._world.calculate_starting_areas(area1=1, area2=1)
+
+        area = self._world.get_area()
 
         # Spawn human
         self._human = Human(self._client_id)
-        self._human.reset(starting_area=human_area)
+        self._human.reset(starting_area=area)
 
         # Spawn robot
         self._robot = Robot(
@@ -132,15 +134,18 @@ class FoBo2Env(gym.Env):
             rgb_height=self.rgb_height,
         )
         # Check distance between robot and human so they do not collision
-        distance = 0
-        while distance < 0.4:
-            robot_area, _ = self._world.calculate_starting_areas(area1=1, area2=1)
-            self._robot.reset(starting_area=robot_area)
-            distance = get_human_robot_distance(
-                client_id=self._client_id,
-                robot_id=self._robot.id,
-                human_id=self._human.id,
-            )
+        # distance = 0
+        # while distance < 0.4:
+        #     robot_area, _ = self._world.calculate_starting_areas(area1=1, area2=1)
+        #     self._robot.reset(starting_area=robot_area)
+        #     distance = get_human_robot_distance(
+        #         client_id=self._client_id,
+        #         robot_id=self._robot.id,
+        #         human_id=self._human.id,
+        #     )
+
+        # Get human position and orientation to be around human and orientation
+        self._robot.reset_human_based(human_pose=self._human.start_pose, area=area, desired_distance=self.desired_distance)
 
         self._robot_tracker = RobotTracker(
             client_id=self._client_id,
@@ -178,7 +183,7 @@ class FoBo2Env(gym.Env):
         reward = self._compute_reward()
         terminated, truncated = self._get_end_episode()
         if truncated:
-            reward = -100
+            reward = -10000
         # This means target achieved by maximum points (at the correct distance and centered on the camera).
         if terminated and reward == 8.0:
             reward = 10000
@@ -192,8 +197,7 @@ class FoBo2Env(gym.Env):
         p.disconnect(self._client_id)
 
     def _human_walk(self):
-        # self._human.step()
-        pass
+        self._human.step()
 
     def _move_robot(self, action):
         self._robot.move(action=action)

@@ -79,3 +79,8 @@ def value_in_range(value: float, center: float, offset: float):
     if difference <= offset:
         return True
     return False
+
+def position_in_range(position, area):
+    if position[0] < area[0][0] or position[0] > area[0][1] or position[1] < area[1][0] or position[1] > area[1][1]:
+        return False
+    return True

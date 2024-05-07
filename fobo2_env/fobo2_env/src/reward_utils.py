@@ -55,7 +55,7 @@ def calculate_pixel_reward(
     center_point = 0.5
     reward = 0.0
     if not any_detected:
-        return 0.0 if has_seen else reward
+        return -1.0 if has_seen else reward
 
     if value_in_range(
         value=x,

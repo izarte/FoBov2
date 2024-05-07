@@ -62,3 +62,11 @@ class World:
         )
 
         return area1_range, area2_range
+    
+    def get_area(self):
+        area = (
+            (self.min_values[0] + 0.7, self.max_values[0] - 0.7),
+            (self.min_values[1] + 0.7, self.max_values[1] - 0.7),
+        )
+
+        return area

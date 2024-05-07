@@ -6,6 +6,7 @@ from fobo2_env.src.utils import (
     random_pos_orientation,
     rotate_by_yaw,
     orientation_in_grad,
+    position_in_range
 )
 
 
@@ -148,6 +149,36 @@ class Robot:
             relative_orientation=[0, 30, 0],
             mode="rgb",
         )
+
+    def reset_human_based(self, human_pose, area, desired_distance):
+        r = np.random.uniform(desired_distance - 0.2, desired_distance + 0.2)
+        while True:
+            angle = np.random.random() * np.pi
+            robot_start_pos = [human_pose[0] + (r * np.cos(angle)), human_pose[1] + (r * np.sin(angle))]
+            if position_in_range(position=robot_start_pos, area=area):
+                break
+
+        yaw_to_human = np.arctan2(
+            robot_start_pos[1] - human_pose[1],
+            robot_start_pos[0] - human_pose[0],
+        )
+
+        yaw_to_human += np.random.uniform(-np.radians(45), np.radians(45))
+        robot_start_orientation = p.getQuaternionFromEuler([0, 0, yaw_to_human])
+
+        
+        self.id = p.loadURDF(
+            physicsClientId=self.client_id,
+            fileName=os.path.dirname(__file__) + "/models/fobo2.urdf",
+            basePosition=[robot_start_pos[0], robot_start_pos[1], 0.25],
+            baseOrientation=robot_start_orientation,
+            useFixedBase=False,
+        )
+        self.depth_camera.reset(robot_start_pos)
+        self.rgb_camera.reset(robot_start_pos)
+        self.move([0, 0])
+
+        
 
     def reset(self, starting_area):
         robot_start_pos, robot_start_orientation = random_pos_orientation(

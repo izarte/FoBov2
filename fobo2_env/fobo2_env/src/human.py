@@ -24,7 +24,24 @@ class Human:
             "left_knee": 44,
             "left_ankle": 47,
         }
-        self.total_step_division = 1000
+        self.total_step_division = 200
+        self.joints_simulation = {}
+        self.current_left_simulation = 0
+        self.current_right_simulation = 0
+        self.step_base_movement_array = np.array([0.005, 0, 0])
+        self.start_pose = 0
+
+    def reset(self, starting_area):
+        self.starting_area = starting_area
+        # Generate random human start position
+        human_start_pos, _ = random_pos_orientation(
+            (starting_area[0], starting_area[1], 1.1)
+        )
+
+        human_speed = np.random.randint(5, 10)
+        self.total_step_division = int(5 / 2 * 100)
+        self.step_base_movement_array = np.array([0.001 * human_speed, 0, 0])
+
         uniform_ankle, uniform_knee, uniform_hip = (
             get_walking_sim_uniform_joints_positions(self.total_step_division)
         )
@@ -35,14 +52,7 @@ class Human:
         }
         self.current_left_simulation = self.total_step_division
         self.current_right_simulation = self.total_step_division // 2
-        self.step_base_movement_array = np.array([0.001, 0, 0])
 
-    def reset(self, starting_area):
-        self.starting_area = starting_area
-        # Generate random human start position
-        human_start_pos, _ = random_pos_orientation(
-            (starting_area[0], starting_area[1], 1.1)
-        )
         # Generate random target for walking and get human orientation
         human_quaternion = self.generate_new_target(position=human_start_pos)
 
@@ -53,6 +63,8 @@ class Human:
             baseOrientation=human_quaternion,
             useFixedBase=False,
         )
+        
+        self.start_pose = human_start_pos
 
         # Remove default pybullet mass in human
         for i in range(
@@ -143,7 +155,6 @@ class Human:
                 ** 2
             )
         )
-        print(distance)
         return value_in_range(value=distance, center=0.1, offset=0.05)
 
     def generate_new_target(self, position):

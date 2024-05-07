@@ -14,3 +14,8 @@
 0.1.3 ->
     -> reward: no negative reward for loosing human in pixel
         - distance: exponetial to 3
+
+0.2.0 ->
+    -> Initial robot pose is at 2.5 +- 0.5 and orientated to human with a +-45. Now human moves. Reduced max steps per instance to 3000
+0.2.1 ->
+    -> Back to -1 reward when human was lost and increase penalty for collision to -10000

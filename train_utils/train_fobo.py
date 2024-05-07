@@ -55,7 +55,7 @@ def main():
                 checkpoints = files = os.listdir(save_path + "/checkpoints")
                 checkpoints = [f for f in files if f.endswith('.zip')]
                 if checkpoints:
-                    model_checkpoint = checkpoints[-1]
+                    model_checkpoint = f"{save_path}/checkpoints/{checkpoints[-1]}"
         else:
             # Create the folder with the unique name
             os.makedirs(save_path)
@@ -154,7 +154,7 @@ def train(mode, save_path, model_type, env_version, model_checkpoint):
             "n_steps": 8,
             "batch_size": n_envs * 8,
             "gae_lambda": 0.9,
-            "gamma": 0.9999,
+            "gamma": 0.99,
             "n_epochs": 2,
             "ent_coef": 0.00429,
             "learning_rate": 0.001,
@@ -163,7 +163,7 @@ def train(mode, save_path, model_type, env_version, model_checkpoint):
         }
         kwargs.update(c_kwargs)
         if model_checkpoint is not None:
-            model = PPO.load(model_checkpoint, env=env)
+            model = PPO.load(model_checkpoint, env=vec_env)
         else:
             model = PPO(**kwargs)
 
