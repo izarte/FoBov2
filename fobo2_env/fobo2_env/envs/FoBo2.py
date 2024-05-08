@@ -123,7 +123,7 @@ class FoBo2Env(gym.Env):
 
         # Spawn human
         self._human = Human(self._client_id)
-        self._human.reset(starting_area=area)
+        self._human.reset(starting_area=area, obstacles_corners=self._world.obstacles_corners)
 
         # Spawn robot
         self._robot = Robot(
@@ -164,6 +164,9 @@ class FoBo2Env(gym.Env):
         self.relevant_collisions = [(self._robot.id, self._human.id)]
         for wall_id in self._world.ids:
             self.relevant_collisions.append((self._robot.id, wall_id))
+        for obstacle in self._world.obstacles_list:
+            self.relevant_collisions.append((self._robot.id, obstacle))
+
 
         self.collision_detector = pyb_utils.CollisionDetector(
             client_id=self._client_id, collision_pairs=self.relevant_collisions

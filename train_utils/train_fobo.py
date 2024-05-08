@@ -72,10 +72,11 @@ def main():
 def train(mode, save_path, model_type, env_version, model_checkpoint):
     # Instantiate the env
     # Save a checkpoint every 1000 steps
+    model_name = f"{MODEL_NAME}_{model_type}_{env_version}",
     checkpoint_callback = CheckpointCallback(
         save_freq=100000,
         save_path=save_path / "checkpoints",
-        name_prefix=f"{MODEL_NAME}_{model_type}_{env_version}",
+        name_prefix=model_name,
         save_replay_buffer=True,
         save_vecnormalize=True,
     )
@@ -83,7 +84,6 @@ def train(mode, save_path, model_type, env_version, model_checkpoint):
     env_kwargs = {"render_mode": mode, "memory": 4}
     log_dir = save_path / "logs"
 
-    model_name = MODEL_NAME + "_" + model_type
     if model_type == "sac":
         with open("hyperparameters/sac_hyperparameters.json", "r") as file:
             data = json.load(file)
