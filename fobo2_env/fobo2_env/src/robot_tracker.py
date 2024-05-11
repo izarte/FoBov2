@@ -49,6 +49,11 @@ class RobotTracker:
             incr = yaw - last_yaw
         self.acc_angle += incr
 
+    def check_loops(self, max_loops = 3):
+        loops = np.abs(self.acc_angle // np.pi)
+
+        return loops > max_loops
+
 
     def check_proximity(self, desired_distance, offset):
         human_distance, _ = p.getBasePositionAndOrientation(
@@ -76,7 +81,6 @@ class RobotTracker:
         std_dev = np.std(distances)
         # print("Standard Deviation of Distances:", std_dev)
 
-        loops = np.abs(self.acc_angle // np.pi) 
         # print("Turns: ", self.acc_angle // np.pi)
 
-        return std_dev < 0.01 or in_range or loops > 3
+        return std_dev < 0.01 or in_range

@@ -72,7 +72,8 @@ def main():
 def train(mode, save_path, model_type, env_version, model_checkpoint):
     # Instantiate the env
     # Save a checkpoint every 1000 steps
-    model_name = f"{MODEL_NAME}_{model_type}_{env_version}",
+    model_name = f"{MODEL_NAME}_{model_type}_{env_version}"
+    print(model_name)
     checkpoint_callback = CheckpointCallback(
         save_freq=100000,
         save_path=save_path / "checkpoints",
@@ -163,6 +164,7 @@ def train(mode, save_path, model_type, env_version, model_checkpoint):
         }
         kwargs.update(c_kwargs)
         if model_checkpoint is not None:
+            print("lodaded model ", model_checkpoint)
             model = PPO.load(model_checkpoint, env=vec_env)
         else:
             model = PPO(**kwargs)

@@ -179,13 +179,13 @@ class Human:
         )
         # Create quaternion pose for human
         human_quaternion = p.getQuaternionFromEuler([0, 0, yaw])
-        _ = p.loadURDF(
-                physicsClientId=self.client_id,
-                fileName=os.path.dirname(__file__) + "/models/cylinder.urdf",
-                basePosition=self.target,
-                baseOrientation=human_quaternion,
-                useFixedBase=True,
-            )
+        # _ = p.loadURDF(
+        #         physicsClientId=self.client_id,
+        #         fileName=os.path.dirname(__file__) + "/models/cylinder.urdf",
+        #         basePosition=self.target,
+        #         baseOrientation=human_quaternion,
+        #         useFixedBase=True,
+        #     )
         # Rotate movement array by calculated yaw with 90 degrees offset
         self.step_movement_array = rotate_by_yaw(
             self.step_base_movement_array, np.degrees(yaw) - 90

@@ -21,3 +21,6 @@
     -> Back to -1 reward when human was lost and increase penalty for collision to -10000
 0.3.0 ->
     -> Add obstacles to world, random number from 2 to 10. An obstacle can't be between human and its target point
+0.3.1 ->
+    -> loop check associated with terminated (negative score) and if distance_reward is negative, it adds to reward no matters if human is in camera
+    -> back to no penality for loosing human

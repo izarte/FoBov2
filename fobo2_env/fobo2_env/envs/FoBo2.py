@@ -222,8 +222,8 @@ class FoBo2Env(gym.Env):
         )
         reward = reward_based_ond_pixel
         # print(f"Pixel reward: {reward_based_ond_pixel} Distance Reward: {reward_based_on_distance}")
-        if reward_based_ond_pixel > 0:
-            reward = reward_based_on_distance + reward_based_ond_pixel
+        if reward_based_ond_pixel > 0 or reward_based_on_distance < 0:
+            reward += reward_based_on_distance
         return reward
 
     def _get_end_episode(self):
@@ -235,6 +235,8 @@ class FoBo2Env(gym.Env):
             )
         if self._steps > self.max_steps:
             terminated = True
+        if self._steps > self.start_terminated_check:
+            truncated = self._robot_tracker.check_loops(3)
         if self.collision_detector.in_collision(margin=0.0):
             truncated = True
         return terminated, truncated
