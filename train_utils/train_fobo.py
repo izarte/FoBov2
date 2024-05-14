@@ -180,10 +180,10 @@ def train(mode, save_path, model_type, env_version, model_checkpoint):
         json.dump(hyperparameters, f, indent=4)
     print(model.policy)
     # model.learn(5, callback=checkpoint_callback)
-    model.learn(n_envs * 500000, callback=checkpoint_callback)
+    model.learn(n_envs * 1000000, callback=checkpoint_callback)
     model_save_path = save_path / model_name
     print("Model succesfully learnt, saving in ", model_save_path)
-    model.save(model_save_path)
+    model.save(f"{model_save_path}.zip")
 
 
 if __name__ == "__main__":

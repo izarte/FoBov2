@@ -15,7 +15,7 @@ services:
       - SAVE_MODEL_PATH=/usr/src/data
       - MODEL_TYPE=sac
       - USED_GPU=0
-      - ENV_VERSION=0.3.1
+      - ENV_VERSION=0.4.0
     privileged: true
     deploy:
       resources:
@@ -38,8 +38,8 @@ services:
       - TRAIN_MODE=DIRECT
       - SAVE_MODEL_PATH=/usr/src/data
       - MODEL_TYPE=ppo
-      - USED_GPU=3
-      - ENV_VERSION=0.3.1
+      - USED_GPU=2
+      - ENV_VERSION=0.4.0
     privileged: true
     deploy:
       resources:

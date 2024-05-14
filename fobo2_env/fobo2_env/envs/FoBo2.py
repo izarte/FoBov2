@@ -10,7 +10,7 @@ from fobo2_env.src.robot_tracker import RobotTracker
 from fobo2_env.src.human import Human
 from fobo2_env.src.robot_fobo import Robot
 from fobo2_env.src.reward_utils import calculate_distance_reward, calculate_pixel_reward
-from fobo2_env.src.utils import get_human_coordinates, get_human_robot_distance
+from fobo2_env.src.utils import get_human_coordinates, get_human_robot_distance, add_noise_to_motors
 from fobo2_env.src.world_generation import World
 
 
@@ -177,9 +177,10 @@ class FoBo2Env(gym.Env):
         return observation, info
 
     def step(self, action):
-        # print(action)
         p.stepSimulation(physicsClientId=self._client_id)
         self._human_walk()
+        action = add_noise_to_motors(action, 1)
+        
         scaled_action = self._scale_action(action)
         self._move_robot(scaled_action)
         observation = self._get_observation()
@@ -247,9 +248,10 @@ class FoBo2Env(gym.Env):
         if not self.human_seen and x > -1:
             self.human_seen = True
         speedL, speedR = self._robot.get_motor_speeds()
+        noise_speedL, noise_speedR = add_noise_to_motors((speedL, speedR), self.boundings["wheels_speed"][1])
         observations = {}
         obs = {
-            "wheels_speed": np.array([speedL, speedR], dtype=np.float32),
+            "wheels_speed": np.array([noise_speedL, noise_speedR], dtype=np.float32),
             "human_pixel": np.array([x, y], dtype=np.float32),
             "depth_image": np.array(depth, dtype=np.float32),
         }

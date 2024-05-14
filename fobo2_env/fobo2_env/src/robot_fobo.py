@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import pybullet as p
+import cv2
 
 from fobo2_env.src.utils import (
     random_pos_orientation,
@@ -16,8 +17,8 @@ class Robot:
             self,
             client_id: int,
             fov: int = 60,
-            near: float = 0.02,
-            far: float = 4,
+            near: float = 2,
+            far: float = 40,
             width: int = 128,
             height: int = 128,
             relative_pose: list = [0.2, 0, 0.15],
@@ -98,9 +99,13 @@ class Robot:
                 image = (normalized_depth * 255).astype(np.uint8)
             return image
 
-        # TODO add noise function to image
         def add_noise(self, image):
-            return image
+            mean = 0
+            stddev = 50
+            noise = np.zeros_like(image, dtype=np.float32)
+            cv2.randn(noise, mean, stddev)
+            noisy_image = cv2.add(image.astype(np.float32), noise)
+            return np.clip(noisy_image, 0, 255).astype(np.uint8)
 
         def move(self, robot_position: np.array, roll: float, pitch: float, yaw: float):
             rotate_relative_pos = rotate_by_yaw(self.relative_pose, yaw)
@@ -129,11 +134,11 @@ class Robot:
         self.depth_camera = self.Camera(
             client_id=client_id,
             fov=70,
-            near=0.02,
-            far=4,
+            near=1,
+            far=20,
             width=self.depth_width,
             height=self.depth_height,
-            relative_pose=[0.50, 0, 0.030],
+            relative_pose=[0.50, 0, 0.6],
             relative_orientation=[0, 0, 0],
             mode="depth",
         )
@@ -233,8 +238,6 @@ class Robot:
         rgb_image = self.rgb_camera.get_image()
         noise_depth = self.depth_camera.add_noise(depth_image)
         noise_rgb = self.rgb_camera.add_noise(rgb_image)
-        # noise_rgb = np.zeros((self.rgb_width, self.rgb_width, 3))
-        # noise_depth = np.zeros((self.depth_width, self.depth_width))
         return noise_rgb, noise_depth
 
     def get_motor_speeds(self):

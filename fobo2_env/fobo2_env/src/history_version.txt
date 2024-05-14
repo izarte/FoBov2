@@ -24,3 +24,5 @@
 0.3.1 ->
     -> loop check associated with terminated (negative score) and if distance_reward is negative, it adds to reward no matters if human is in camera
     -> back to no penality for loosing human
+0.4.0 -> Correct depth image perception
+    -> add noise to both images with stddev = 50, and noise to actions with std = 0.01

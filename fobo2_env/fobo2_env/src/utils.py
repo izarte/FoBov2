@@ -84,3 +84,15 @@ def position_in_range(position, area):
     if position[0] < area[0][0] or position[0] > area[0][1] or position[1] < area[1][0] or position[1] > area[1][1]:
         return False
     return True
+
+def add_noise_to_motors(speeds, max_value):
+    std = 0.01
+    noise_speeds = np.random.normal(loc=0, scale=std, size=2).astype(np.float64)
+    speeds += noise_speeds
+
+    for i in [0, 1]:
+        if speeds[i] > max_value:
+            speeds[i] = max_value
+        elif speeds[i] < -max_value:
+            speeds[i] = -max_value
+    return speeds
