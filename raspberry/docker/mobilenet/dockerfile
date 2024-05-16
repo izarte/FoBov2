@@ -1,0 +1,19 @@
+FROM arm64v8/debian:bullseye-slim
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN echo "deb https://packages.cloud.google.com/apt coral-edgetpu-stable main" | tee /etc/apt/sources.list.d/coral-edgetpu.list
+RUN apt-get update && apt-get install -y curl python3 python3-pip git wget unzip gstreamer1.0-plugins-bad gstreamer1.0-plugins-good python3-gst-1.0 python3-gi gir1.2-gtk-3.0 python3-rpi.gpio python3-skimage python3-dev
+RUN curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+RUN echo "libedgetpu libedgetpu/accepted-eula boolean true" | debconf-set-selections && apt-get update && apt-get install -y libedgetpu1-max python3-pycoral ffmpeg libsm6 libxext6 build-essential
+
+RUN apt-get update && apt-get install -y freetype* libpng-dev libfontconfig1-dev
+RUN python3 -m pip install matplotlib==2.1.1
+
+WORKDIR /usr/src/
+RUN wget https://github.com/abewley/sort/archive/master.zip -O sort.zip
+RUN unzip sort.zip
+RUN wget https://dl.google.com/coral/canned_models/mobilenet_ssd_v2_coco_quant_postprocess_edgetpu.tflite
+RUN wget https://dl.google.com/coral/canned_models/coco_labels.txt
+COPY requirements_for_sort_tracker.txt requirements_for_sort_tracker.txt
+RUN python3 -m pip install -r requirements_for_sort_tracker.txt
+RUN python3 -m pip install websockets
