@@ -1,0 +1,3 @@
+[submodule "raspberry/src/object-tracker-mobile-net-fobov2"]
+	path = raspberry/src/object-tracker-mobile-net-fobov2
+	url = https://github.com/izarte/object-tracker-mobile-net-fobov2

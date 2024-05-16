@@ -1,6 +1,6 @@
 import sys
 import numpy as np
-from websocket import create_connection
+from websockets.sync.client import connect
 import json
 
 import sys
@@ -26,13 +26,13 @@ class ReadDepth:
         self.cam.close()
 
     def send_data(self):
-        ws = create_connection("ws://localhost:8001/")
-        ws.send(json.dumps(self.data))
-        ws.close()
+        with connect("ws://main:8001/") as ws:
+            ws.send(json.dumps(self.data))
+            ws.close()
 
     def detect_person(self):
         frame = self.cam.requestFrame(200)
-        if frame == None:
+        if frame is None:
             return
         depth_buf = frame.getDepthData()
         self.cam.releaseFrame(frame)

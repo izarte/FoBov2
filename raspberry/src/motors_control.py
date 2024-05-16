@@ -4,16 +4,16 @@ import time
 
 class MotorsControl:
     def __init__(self):
-        self.ser = serial.Serial("/dev/ttyS0", 115200, timeout=1)
+        self.ser = serial.Serial("/dev/serial0", 1500000, timeout=1)
         self.ser.flush()
 
-    def move(self, speed: tuple[float, float]):
+    def move_and_read(self, speed: tuple[float, float]) -> tuple[float, float]:
         speed_str = f"{speed[0]} {speed[1]}"
-        self.ser.write(speed_str)
-
-    def read_encoders(self) -> tuple[float, float]:
-        self.ser.write("Read")
-        speeds_str = self.ser.readline().decode("utf-8").rstrip()
+        print("Sending: ", speed_str)
+        self.ser.write(speed_str.encode("utf_8"))
+        speeds_str = ""
+        while not speeds_str:
+            speeds_str = self.ser.readline().decode("utf-8")
         speeds = speeds_str.split(" ")
 
         return [float(speeds[0]), float(speeds[1])]
@@ -21,16 +21,21 @@ class MotorsControl:
 
 def main():
     while True:
-        string = input("enter string:")  # input from user
-        string = string + "\n"  # "\n" for line seperation
+        string = "0.3 0"  # input from user
+        print("sending ", string)
         string = string.encode("utf_8")
+        t1 = time.time_ns()
         ser.write(string)
-        line = ser.readline().decode("utf-8").rstrip()
-        print("received: ", line)
-        time.sleep(1)  # delay of 1 second
+        # time.sleep(1)  # delay of 1 second
+        line = ""
+        while not line:
+            line = ser.readline().decode("utf-8")
+        t2 = time.time_ns()
+        print(f"received: {line}")
+        print(f"in {t2 - t1} ns, {(t2 - t1) / 1000000000} s")
 
 
 if __name__ == "__main__":
-    ser = serial.Serial("/dev/ttyS0", 115200, timeout=1)
+    ser = serial.Serial("/dev/serial0", 1500000, timeout=1)
     ser.flush()
     main()
