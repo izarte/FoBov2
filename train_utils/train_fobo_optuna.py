@@ -1,6 +1,7 @@
 from hyperparameters_samples import (
     sample_a2c_params,
     sample_sac_params,
+    sample_ppo_params,
     sample_ppo_lstm_params,
 )
 
@@ -78,11 +79,17 @@ class TrialEvalCallback(EvalCallback):
 
 
 def objective(trial: optuna.Trial) -> float:
+    try:
+        model_type = os.environ["MODEL_TYPE"]
+    except:
+        model_type = "sac"
     kwargs = DEFAULT_HYPERPARAMS.copy()
     # Sample hyperparameters.
     # new_kwargs, new_env_kwargs, n_envs = sample_a2c_params(trial)
-    # new_kwargs, new_env_kwargs, n_envs = sample_sac_params(trial)
-    new_kwargs, new_env_kwargs, n_envs = sample_ppo_lstm_params(trial)
+    if model_type == "sac":
+        new_kwargs, new_env_kwargs, n_envs = sample_sac_params(trial)
+    elif model_type == "ppo":
+        new_kwargs, new_env_kwargs, n_envs = sample_ppo_params(trial)
     kwargs.update(new_kwargs)
     env_kwargs = {"render_mode": "DIRECT"}
     env_kwargs.update(new_env_kwargs)
@@ -100,7 +107,8 @@ def objective(trial: optuna.Trial) -> float:
         )
     except Exception as e:
         print(e)
-        logging.info(e + "\n")
+        logging.info(e)
+        logging.info("\n")
         oversize = True
     if oversize:
         return float("nan")
@@ -116,7 +124,8 @@ def objective(trial: optuna.Trial) -> float:
         )
     except Exception as e:
         print(e)
-        logging.info(e + "\n")
+        logging.info(e)
+        logging.info("\n")
         oversize = True
     if oversize:
         return float("nan")
@@ -125,11 +134,14 @@ def objective(trial: optuna.Trial) -> float:
     # Create the RL model.
     try:
         # model = A2C(**kwargs)
-        # model = SAC(**kwargs)
-        model = PPO(**kwargs)
+        if model_type == "sac":
+            model = SAC(**kwargs)
+        elif model_type == "ppo":
+            model = PPO(**kwargs)
     except Exception as e:
         print(e)
-        logging.info(e + "\n")
+        logging.info(e)
+        logging.info("\n")
         oversize = True
     if oversize:
         return float("nan")
@@ -142,7 +154,8 @@ def objective(trial: optuna.Trial) -> float:
     except Exception as e:
         # Sometimes, random hyperparams can generate NaN.
         print(e)
-        logging.info(e + "\n")
+        logging.info(e)
+        logging.info("\n")
         nan_encountered = True
     finally:
         # Free memory.
@@ -161,7 +174,11 @@ def objective(trial: optuna.Trial) -> float:
 
 
 def train_optuna(gpu, mode, save_path):
-    log_file = save_path + "/logs/optuna_log.txt"
+    try:
+        model_type = os.environ["MODEL_TYPE"]
+    except:  # noqa: E722
+        model_type = "sac"
+    log_file = save_path + f"/logs/optuna_{model_type}_log.txt"
     # Create the log file if it doesn't exist
     if not os.path.exists(log_file):
         with open(log_file, "w"):
