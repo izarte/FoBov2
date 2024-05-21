@@ -15,3 +15,20 @@ Best trial:
     rgb_size: 512
     depth_size: 128
     n_envs: 64
+
+INFO:root:Number of finished trials: 100
+INFO:root:Best trial:
+INFO:root:  Value: -inf
+INFO:root:  Params:
+INFO:root:    gamma: 0.995
+INFO:root:    learning_rate: 0.0694407116029419
+INFO:root:    batch_size: 896
+INFO:root:    learning_starts: 0
+INFO:root:    train_freq: 8
+INFO:root:    tau: 0.01
+INFO:root:    log_std_init: -3.484081210153903
+INFO:root:    net_arch: medium
+INFO:root:    memory: 4
+INFO:root:    rgb_size: 96
+INFO:root:    depth_size: 64
+INFO:root:    n_envs: 64
