@@ -1,7 +1,7 @@
 from stable_baselines3 import SAC, A2C, PPO
 from stable_baselines3.common.env_util import make_vec_env
 import torch
-import gymnasium as gym 
+import gymnasium as gym
 import fobo2_env
 import os
 import json
@@ -45,7 +45,7 @@ def main():
         if os.path.exists(save_path):
             files = os.listdir(save_path)
             # Filter for files that end with '.zip'
-            zip_files = [f for f in files if f.endswith('.zip')]
+            zip_files = [f for f in files if f.endswith(".zip")]
             if zip_files:
                 # If the folder exists and prevoius traing was finished, append a number to the base name and increment the counter
                 save_path = save_path[:-1] + str(counter)
@@ -53,7 +53,7 @@ def main():
             else:
                 allocating_path = False
                 checkpoints = files = os.listdir(save_path + "/checkpoints")
-                checkpoints = [f for f in files if f.endswith('.zip')]
+                checkpoints = [f for f in files if f.endswith(".zip")]
                 if checkpoints:
                     model_checkpoint = f"{save_path}/checkpoints/{checkpoints[-1]}"
         else:
@@ -103,15 +103,15 @@ def train(mode, save_path, model_type, env_version, model_checkpoint):
         # )
         kwargs = {"policy": "MultiInputPolicy", "env": env}
         # kwargs.update(data["Best_trial"]["Params"])
-        c_kwargs = {
-            "gamma": 0.98,
-            "buffer_size": 10000,
-            "ent_coef": "auto",
-            "train_freq": 4,
-            "seed": 37,
-            "batch_size": 256,
-        }
-        kwargs.update(c_kwargs)
+        # c_kwargs = {
+        #     "gamma": 0.98,
+        #     "buffer_size": 10000,
+        #     "ent_coef": "auto",
+        #     "train_freq": 4,
+        #     "seed": 37,
+        #     "batch_size": 256,
+        # }
+        # kwargs.update(c_kwargs)
         if model_checkpoint is not None:
             model = SAC.load(model_checkpoint, env=env)
         else:
