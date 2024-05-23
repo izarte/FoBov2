@@ -1,0 +1,22 @@
+INFO:root:Number of finished trials: 3
+INFO:root:Best trial:
+INFO:root:  Value: -inf
+INFO:root:  Params: 
+INFO:root:    gamma: 0.9999
+INFO:root:    normalize_advantage: True
+INFO:root:    max_grad_norm: 0.9
+INFO:root:    use_rms_prop: False
+INFO:root:    gae_lambda: 0.99
+INFO:root:    n_steps: 128
+INFO:root:    lr_schedule: constant
+INFO:root:    learning_rate: 0.00036673476428959707
+INFO:root:    ent_coef: 0.0004129941272987717
+INFO:root:    vf_coef: 0.8578939861072059
+INFO:root:    ortho_init: False
+INFO:root:    net_arch: medium
+INFO:root:    activation_fn: tanh
+INFO:root:    memory: 4
+INFO:root:    rgb_size: 256
+INFO:root:    depth_size: 192
+INFO:root:    n_envs: 64
+INFO:root:  User attrs:

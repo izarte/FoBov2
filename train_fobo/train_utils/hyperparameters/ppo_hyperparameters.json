@@ -1,0 +1,23 @@
+{
+  "Number of finished trials": 4,
+  "Best_trial": {
+    "Value": "-inf",
+    "Params": {
+      "gamma": 0.98,
+      "learning_rate": 0.32914326864659793,
+      "batch_size": 512,
+      "buffer_size": 100000,
+      "learning_starts": 20000,
+      "train_freq": 4,
+      "tau": 0.02
+    },
+    "env": {
+      "memory": 6,
+      "rgb_width": 128,
+      "rgb_height": 128,
+      "depth_width": 320,
+      "depth_height": 320
+    },
+    "n_envs": 12
+  }
+}

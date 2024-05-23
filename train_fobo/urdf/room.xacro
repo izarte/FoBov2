@@ -1,0 +1,125 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="fobo2">
+
+    <xacro:property name="wall_length" value="10" />
+    <xacro:property name="wall_height" value="6" />
+    <xacro:property name="wall_depth" value="0.2" />
+
+    <xacro:macro name="cylinder_inertia" params="m r h">
+        <inertia  ixx="${m*(3*r*r+h*h)/12}" ixy = "0" ixz = "0"
+                    iyy="${m*(3*r*r+h*h)/12}" iyz = "0"
+                    izz="${m*r*r/2}" /> 
+    </xacro:macro>
+
+
+    <xacro:macro name="box_inertia" params="m x y z">
+        <inertia  ixx="${m*(y*y+z*z)/12}" ixy = "0" ixz = "0"
+                    iyy="${m*(x*x+z*z)/12}" iyz = "0"
+                    izz="${m*(x*x+z*z)/12}" /> 
+    </xacro:macro>
+
+    <xacro:macro name="sphere_inertia" params="m r">
+        <inertia  ixx="${2*m*r*r/5}" ixy = "0" ixz = "0"
+                    iyy="${2*m*r*r/5}" iyz = "0"
+                    izz="${2*m*r*r/5}" /> 
+    </xacro:macro>
+
+
+    <!-- link macros -->
+    <xacro:macro name="box_link" params="link_name length width depth mass color">
+        <link name="${link_name}">
+            <visual>
+            <geometry>
+                <box size="${length} ${width} ${depth}"/>
+            </geometry>
+                <origin rpy="0 1.5707 0" xyz="0 0 0"/>
+                <material name="${color}">
+                    <color rgba="0 0 1 1"/>
+                </material>
+            </visual>
+            <collision>
+            <geometry>
+                <box size="${length} ${width} ${depth}"/>
+            </geometry>
+                <origin rpy="0 0 0" xyz="0 0 0"/>
+            </collision>
+            <inertial>
+                <mass value="${mass}"/>
+                <xacro:box_inertia m="${mass}" x="${length}" y="${width}" z="${depth}" />
+            </inertial>
+        </link>
+    </xacro:macro>
+
+
+    <xacro:macro name="cylinder_link" params="link_name radius length mass color">
+        <link name="${link_name}">
+            <visual>
+                <geometry>
+                    <cylinder radius="${radius}" length="${length}"/>
+                </geometry>
+                <origin rpy="0 0 0" xyz="0 0 0"/>
+                <material name="${color}">
+                    <color rgba="1 1 1 1"/>
+                </material>
+            </visual>
+            <collision>
+                <geometry>
+                    <cylinder radius="${radius}" length="${length}"/>
+                </geometry>
+                <origin rpy="0 0 0" xyz="0 0 0"/>
+            </collision>
+            <inertial>
+                <mass value="${mass}"/>
+                <xacro:cylinder_inertia m="${mass}" r="${radius}" h="${length}" />
+            </inertial>
+        </link>
+    </xacro:macro>
+
+    <xacro:macro name="sphere_link" params="link_name radius mass color">
+        <link name="${link_name}">
+            <visual>
+                <geometry>
+                    <sphere radius="${radius}" />
+                </geometry>
+                <origin rpy="0 0 0" xyz="0 0 0"/>
+                <material name="${color}">
+                    <color rgba="1 1 1 1"/>
+                </material>
+            </visual>
+            <collision>
+                <geometry>
+                    <sphere radius="${radius}" />
+                </geometry>
+                <origin rpy="0 0 0" xyz="0 0 0"/>
+            </collision>
+            <inertial>
+                <mass value="${mass}"/>
+                <xacro:sphere_inertia m="${mass}" r="${radius}" />
+            </inertial>
+        </link>
+    </xacro:macro>
+
+
+
+    <!-- Define links joints macros  -->
+    <xacro:macro name="static_joint" params="name parent child xyz rpy">
+        <joint name="${name}" type="fixed">
+            <parent link="${parent}" />
+            <child link="${child}" />
+            <origin xyz="${xyz}" rpy="${rpy}"/>
+        </joint>
+    </xacro:macro>
+
+
+    <!-- Base link -->
+    <xacro:box_link link_name="wall1" length="${wall_height}" width="${wall_length}" depth="${wall_depth}" mass="0" color="white" />
+    <xacro:box_link link_name="wall2" length="${wall_height}" width="${wall_length}" depth="${wall_depth}" mass="0" color="white" />
+    <xacro:box_link link_name="wall3" length="${wall_height}" width="${wall_length}" depth="${wall_depth}" mass="0" color="white" />
+    <xacro:box_link link_name="wall4" length="${wall_height}" width="${wall_length}" depth="${wall_depth}" mass="0" color="white" />
+
+    <xacro:static_joint name="wall12" parent="wall1" child="wall2" xyz="${wall_length/2} ${wall_length/2} 0" rpy="0 0 1.5707"/>    
+    <xacro:static_joint name="wall13" parent="wall1" child="wall3" xyz="${wall_length/2} -${wall_length/2} 0" rpy="0 0 -1.5707"/>    
+    <xacro:static_joint name="wall14" parent="wall1" child="wall4" xyz="${wall_length} 0 0" rpy="0 0 0"/>    
+
+</robot>
