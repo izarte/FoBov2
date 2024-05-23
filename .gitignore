@@ -1,3 +1,2 @@
 venv/
-*.pio
-*.vscode
+__pycache__/
