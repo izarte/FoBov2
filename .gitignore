@@ -1,5 +1,6 @@
 .vscode/
 venv/
+train_fobo/
 yolov8n_saved_model/
 *.tflite
 *.onnx
