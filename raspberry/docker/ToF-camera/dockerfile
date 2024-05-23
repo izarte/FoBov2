@@ -1,0 +1,16 @@
+FROM arm64v8/debian:bullseye-slim
+
+RUN apt-get update && apt-get install -y git curl gnupg build-essential
+WORKDIR /usr/local/
+RUN git clone https://github.com/ArduCAM/Arducam_tof_camera
+
+RUN bash -c 'echo camera_auto_detect=0 >> /boot/config.txt'
+RUN bash -c 'echo dtoverlay=arducam-pivariety,media-controller=0 >> /boot/config.txt'
+RUN curl -s --compressed "https://arducam.github.io/arducam_ppa/KEY.gpg" | apt-key add -
+RUN curl -s --compressed -o /etc/apt/sources.list.d/arducam_list_files.list "https://arducam.github.io/arducam_ppa/arducam_list_files.list"
+
+RUN apt-get update && apt-get install -y arducam-config-parser-dev arducam-usb-sdk-dev arducam-tof-sdk-dev cmake libopencv-dev python3 python3-pip
+RUN python3 -m pip install opencv-python numpy ArducamDepthCamera websockets
+WORKDIR /usr/local/Arducam_tof_camera
+
+CMD [ "/bin/bash", "-c", "/usr/local/Arducam_tof_camera/example/build/c/test_c" ]
