@@ -1,0 +1,21 @@
+#ifndef PIN_DEFINITIONS_H
+#define PIN_DEFINITIONS_H
+
+#define RIGHT_ENCODER_PIN_A 39
+#define RIGHT_ENCODER_PIN_B 36
+
+#define RIGHT_DIR_PIN 19
+#define RIGHT_PWM_PIN 18
+
+
+#define LEFT_ENCODER_PIN_A 26
+#define LEFT_ENCODER_PIN_B 25
+
+#define LEFT_DIR_PIN 23
+#define LEFT_PWM_PIN 22
+
+
+#define RIGHT_PWM_CHANNEL 0
+#define LEFT_PWM_CHANNEL 1
+
+#endif
