@@ -10,7 +10,7 @@ from fobo2_env.src.robot_tracker import RobotTracker
 from fobo2_env.src.human import Human
 from fobo2_env.src.robot_fobo import Robot
 from fobo2_env.src.reward_utils import calculate_distance_reward, calculate_pixel_reward
-from fobo2_env.src.utils import get_human_coordinates, get_human_robot_distance
+from fobo2_env.src.utils import get_human_coordinates, get_human_robot_distance, add_noise_to_motors
 from fobo2_env.src.world_generation import World
 
 
@@ -34,11 +34,12 @@ class FoBo2Env(gym.Env):
         self.rgb_height = rgb_height
 
         # Define constant values
-        self.desired_distance = 1.5
-        self.offset = 0.2
+        self.desired_distance = 3
+        self.offset = 0.5
         self.start_scoring_offset = 3
-        self.max_track = 500
+        self.max_track = 1000
         self.start_terminated_check = 1000
+        self.max_steps = 3000
 
         self.boundings = {
             "wheels_speed": [-35, 35],
@@ -54,7 +55,7 @@ class FoBo2Env(gym.Env):
             memory=memory, boundings=self.boundings, dtypes=self.dtypes
         )
         # Observation space are input variables for system
-        # All values are normalized except to depth image due to auto normalizacion in cnn
+        # All values are normalized in observation manager
         self.observation_space = spaces.Dict(
             {
                 "wheels_speed": spaces.Box(
@@ -71,7 +72,7 @@ class FoBo2Env(gym.Env):
                 ),
                 "depth_image": spaces.Box(
                     low=0,
-                    high=255,
+                    high=1,
                     shape=(memory, depth_width, depth_height),
                     dtype=self.dtypes["depth_image"],
                 ),
@@ -79,9 +80,7 @@ class FoBo2Env(gym.Env):
             }
         )
         # Action space, 2 real values for each motor speed
-        self.action_space = spaces.Box(
-            low=np.array([-1, -1]), high=np.array([1, 1]), dtype=np.float32
-        )
+        self.action_space = spaces.Box(low=-1, high=1, shape=(2,), dtype=np.float32)
 
         # Set render mode and initialize pybullet client
         if render_mode == "DIRECT":
@@ -97,9 +96,12 @@ class FoBo2Env(gym.Env):
         self._robot_tracker = None
         self._steps = 0
 
+        self.human_seen = False
+
     def reset(self, seed=None, options=None):
         self._steps = 0
         super().reset(seed=seed)
+        np.random.seed(seed)
         # Reset simulation
         p.resetSimulation(self._client_id)
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
@@ -115,11 +117,13 @@ class FoBo2Env(gym.Env):
         self._world.create_basic_room()
 
         # Get spawning zone for robot and human percentage
-        robot_area, human_area = self._world.calculate_starting_areas(area1=1, area2=1)
+        # robot_area, human_area = self._world.calculate_starting_areas(area1=1, area2=1)
+
+        area = self._world.get_area()
 
         # Spawn human
         self._human = Human(self._client_id)
-        self._human.reset(starting_area=human_area)
+        self._human.reset(starting_area=area, obstacles_corners=self._world.obstacles_corners)
 
         # Spawn robot
         self._robot = Robot(
@@ -130,51 +134,66 @@ class FoBo2Env(gym.Env):
             rgb_height=self.rgb_height,
         )
         # Check distance between robot and human so they do not collision
-        distance = 0
-        while distance < 0.4:
-            robot_area, _ = self._world.calculate_starting_areas(area1=1, area2=1)
-            self._robot.reset(starting_area=robot_area)
-            distance = get_human_robot_distance(
-                client_id=self._client_id,
-                robot_id=self._robot.id,
-                human_id=self._human.id,
-            )
+        # distance = 0
+        # while distance < 0.4:
+        #     robot_area, _ = self._world.calculate_starting_areas(area1=1, area2=1)
+        #     self._robot.reset(starting_area=robot_area)
+        #     distance = get_human_robot_distance(
+        #         client_id=self._client_id,
+        #         robot_id=self._robot.id,
+        #         human_id=self._human.id,
+        #     )
+
+        # Get human position and orientation to be around human and orientation
+        self._robot.reset_human_based(human_pose=self._human.start_pose, area=area, desired_distance=self.desired_distance)
 
         self._robot_tracker = RobotTracker(
-            client_id=self._client_id, robot_id=self._robot.id, max_track=self.max_track
+            client_id=self._client_id,
+            robot_id=self._robot.id,
+            human_id=self._human.id,
+            max_track=self.max_track,
         )
 
         # Reset observation space and fill it with first values
         self.observation_manager.reset()
-        for _ in range(self.memory):
+        for _ in range(4 * self.memory):
             observation = self._get_observation()
+            p.stepSimulation(physicsClientId=self._client_id)
         info = self._get_info()
 
         self.relevant_collisions = [(self._robot.id, self._human.id)]
         for wall_id in self._world.ids:
             self.relevant_collisions.append((self._robot.id, wall_id))
+        for obstacle in self._world.obstacles_list:
+            self.relevant_collisions.append((self._robot.id, obstacle))
+
 
         self.collision_detector = pyb_utils.CollisionDetector(
             client_id=self._client_id, collision_pairs=self.relevant_collisions
         )
+        # Variable to punish robot for losing human in camera
+        self.human_seen = False
 
         return observation, info
 
     def step(self, action):
         p.stepSimulation(physicsClientId=self._client_id)
         self._human_walk()
+        action = add_noise_to_motors(action, 1)
+        
         scaled_action = self._scale_action(action)
         self._move_robot(scaled_action)
         observation = self._get_observation()
         reward = self._compute_reward()
         terminated, truncated = self._get_end_episode()
         if truncated:
-            reward = -100
+            reward = -10000
         # This means target achieved by maximum points (at the correct distance and centered on the camera).
         if terminated and reward == 8.0:
             reward = 10000
         info = self._get_info()
         self._steps += 1
+        # print("Reward: ", reward)
 
         return observation, reward, terminated, truncated, info
 
@@ -182,8 +201,7 @@ class FoBo2Env(gym.Env):
         p.disconnect(self._client_id)
 
     def _human_walk(self):
-        # self._human.step()
-        pass
+        self._human.step()
 
     def _move_robot(self, action):
         self._robot.move(action=action)
@@ -199,17 +217,27 @@ class FoBo2Env(gym.Env):
             max_distace=self._world.max_distance,
             offset=self.offset,
         )
+        x, any_detected = self.observation_manager.get_x()
         reward_based_ond_pixel = calculate_pixel_reward(
-            x=self.observation_manager.get_x(), offset=0.1
+            x=x, any_detected=any_detected, offset=0.1, has_seen=self.human_seen
         )
-        reward = reward_based_on_distance + reward_based_ond_pixel
+        reward = reward_based_ond_pixel
+        # print(f"Pixel reward: {reward_based_ond_pixel} Distance Reward: {reward_based_on_distance}")
+        if reward_based_ond_pixel > 0 or reward_based_on_distance < 0:
+            reward += reward_based_on_distance
         return reward
 
     def _get_end_episode(self):
         truncated = False
         terminated = False
         if self._steps > self.start_terminated_check:
-            terminated = self._robot_tracker.check_proximity()
+            terminated = self._robot_tracker.check_proximity(
+                desired_distance=self.desired_distance, offset=self.offset
+            )
+        if self._steps > self.max_steps:
+            terminated = True
+        if self._steps > self.start_terminated_check:
+            truncated = self._robot_tracker.check_loops(3)
         if self.collision_detector.in_collision(margin=0.0):
             truncated = True
         return terminated, truncated
@@ -217,16 +245,20 @@ class FoBo2Env(gym.Env):
     def _get_observation(self):
         rgb, depth = self._robot.get_images()
         x, y = get_human_coordinates(rgb)
+        if not self.human_seen and x > -1:
+            self.human_seen = True
         speedL, speedR = self._robot.get_motor_speeds()
+        noise_speedL, noise_speedR = add_noise_to_motors((speedL, speedR), self.boundings["wheels_speed"][1])
         observations = {}
         obs = {
-            "wheels_speed": np.array([speedL, speedR], dtype=np.float32),
+            "wheels_speed": np.array([noise_speedL, noise_speedR], dtype=np.float32),
             "human_pixel": np.array([x, y], dtype=np.float32),
             "depth_image": np.array(depth, dtype=np.float32),
         }
 
         self.observation_manager.add(obs)
         observations = self.observation_manager.get_observations()
+
         return observations
 
     def _scale_action(self, norm_action):

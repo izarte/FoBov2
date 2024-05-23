@@ -24,7 +24,26 @@ class Human:
             "left_knee": 44,
             "left_ankle": 47,
         }
-        self.total_step_division = 1000
+        self.total_step_division = 200
+        self.joints_simulation = {}
+        self.current_left_simulation = 0
+        self.current_right_simulation = 0
+        self.step_base_movement_array = np.array([0.005, 0, 0])
+        self.start_pose = 0
+
+    def reset(self, starting_area, obstacles_corners):
+        self.starting_area = starting_area
+        # Generate random human start position
+        human_start_pos, _ = random_pos_orientation(
+            (starting_area[0], starting_area[1], 1.1)
+        )
+
+        self.obstacles_corners = obstacles_corners
+
+        human_speed = np.random.randint(5, 10)
+        self.total_step_division = int(5 / 2 * 100)
+        self.step_base_movement_array = np.array([0.001 * human_speed, 0, 0])
+
         uniform_ankle, uniform_knee, uniform_hip = (
             get_walking_sim_uniform_joints_positions(self.total_step_division)
         )
@@ -35,14 +54,7 @@ class Human:
         }
         self.current_left_simulation = self.total_step_division
         self.current_right_simulation = self.total_step_division // 2
-        self.step_base_movement_array = np.array([0.001, 0, 0])
 
-    def reset(self, starting_area):
-        self.starting_area = starting_area
-        # Generate random human start position
-        human_start_pos, _ = random_pos_orientation(
-            (starting_area[0], starting_area[1], 1.1)
-        )
         # Generate random target for walking and get human orientation
         human_quaternion = self.generate_new_target(position=human_start_pos)
 
@@ -53,6 +65,8 @@ class Human:
             baseOrientation=human_quaternion,
             useFixedBase=False,
         )
+        
+        self.start_pose = human_start_pos
 
         # Remove default pybullet mass in human
         for i in range(
@@ -143,14 +157,21 @@ class Human:
                 ** 2
             )
         )
-        print(distance)
         return value_in_range(value=distance, center=0.1, offset=0.05)
 
     def generate_new_target(self, position):
-        # Get new random position for target
-        self.target, _ = random_pos_orientation(
-            (self.starting_area[0], self.starting_area[1], 1.1)
-        )
+        invalid = True
+        while invalid:
+            invalid = False
+            # Get new random position for target
+            self.target, _ = random_pos_orientation(
+                (self.starting_area[0], self.starting_area[1], 1.1)
+            )
+            for obstacle_corners in self.obstacles_corners:
+                intersection = line_intersects_quadrilateral((self.target, position), obstacle_corners)
+                if intersection:
+                    invalid = True
+                    break
         # Calculate direction between human and target
         yaw = np.arctan2(
             self.target[1] - position[1],
@@ -158,8 +179,76 @@ class Human:
         )
         # Create quaternion pose for human
         human_quaternion = p.getQuaternionFromEuler([0, 0, yaw])
+        # _ = p.loadURDF(
+        #         physicsClientId=self.client_id,
+        #         fileName=os.path.dirname(__file__) + "/models/cylinder.urdf",
+        #         basePosition=self.target,
+        #         baseOrientation=human_quaternion,
+        #         useFixedBase=True,
+        #     )
         # Rotate movement array by calculated yaw with 90 degrees offset
         self.step_movement_array = rotate_by_yaw(
             self.step_base_movement_array, np.degrees(yaw) - 90
         )
         return human_quaternion
+
+
+def orientation(p, q, r):
+    """Calculate the orientation of the triplet (p, q, r).
+    0 -> p, q and r are collinear
+    1 -> Clockwise
+    2 -> Counterclockwise"""
+    val = (q[1] - p[1]) * (r[0] - q[0]) - (q[0] - p[0]) * (r[1] - q[1])
+    if val == 0:
+        return 0
+    elif val > 0:
+        return 1
+    else:
+        return 2
+
+def on_segment(p, q, r):
+    """Given collinear points p, q, r, checks if point q lies on line segment 'pr'"""
+    if min(p[0], r[0]) <= q[0] <= max(p[0], r[0]) and min(p[1], r[1]) <= q[1] <= max(p[1], r[1]):
+        return True
+    return False
+
+def segments_intersect(p1, q1, p2, q2):
+    """Returns True if line segment 'p1q1' and 'p2q2' intersect."""
+    o1 = orientation(p1, q1, p2)
+    o2 = orientation(p1, q1, q2)
+    o3 = orientation(p2, q2, p1)
+    o4 = orientation(p2, q2, q1)
+
+    # General case
+    if o1 != o2 and o3 != o4:
+        return True
+
+    # Special Cases
+    # p1, q1 and p2 are collinear and p2 lies on segment p1q1
+    if o1 == 0 and on_segment(p1, p2, q1):
+        return True
+
+    # p1, q1 and p2 are collinear and q2 lies on segment p1q1
+    if o2 == 0 and on_segment(p1, q2, q1):
+        return True
+
+    # p2, q2 and p1 are collinear and p1 lies on segment p2q2
+    if o3 == 0 and on_segment(p2, p1, q2):
+        return True
+
+    # p2, q2 and q1 are collinear and q1 lies on segment p2q2
+    if o4 == 0 and on_segment(p2, q1, q2):
+        return True
+
+    # Doesn't fall in any of the above cases
+    return False
+
+def line_intersects_quadrilateral(segment, quadrilateral):
+    """Check if the line segment intersects any side of the quadrilateral."""
+    p1, q1 = segment
+    for i in range(len(quadrilateral)):
+        p2 = quadrilateral[i]
+        q2 = quadrilateral[(i + 1) % len(quadrilateral)]  # Cycle around to the first point
+        if segments_intersect(p1, q1, p2, q2):
+            return True
+    return False
