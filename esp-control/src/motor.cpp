@@ -38,7 +38,7 @@ void Motor::set_speed(int speed)
         speed = -100;
 
     digitalWrite(dir_pin, speed > 0 ^ inverse);
-  	ledcWrite(pwm_chan, 255 * speed / 100);
+  	ledcWrite(pwm_chan, 255 * abs(speed) / 100);
 }
 
 

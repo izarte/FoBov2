@@ -26,10 +26,8 @@ int separation_idx, left_speed, right_speed;
 void loop() {
   while (UART1.available()) {
     char readenChar = (char)UART1.read();
-    Serial.print(readenChar);
     inputBuffer += readenChar;
     if (readenChar == '\n') {
-      Serial.println("");
       separation_idx = inputBuffer.indexOf(' ');
       left_speed = inputBuffer.substring(0, separation_idx).toInt();
       right_speed = inputBuffer.substring(separation_idx + 1).toInt();
