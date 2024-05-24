@@ -5,7 +5,7 @@ import json
 
 
 def on_key_press(event, label):
-    speed = 0
+    speed = 10
     w = 0
     left_speed = 0
     right_speed = 0
@@ -15,9 +15,17 @@ def on_key_press(event, label):
     if key == "p":
         root.destroy()  # This will close the GUI and terminate the program
     if key == "w":
-        speed = 1
+        speed = speed
     elif key == "s":
-        speed = -1
+        speed = -speed
+    if key == "i":
+        speed += 10
+        if speed >= 100:
+            speed = 100
+    elif key == "k":
+        speed -= 10
+        if speed <= 0:
+            speed = 0
     if key == "a":
         w = -1
     elif key == "d":
@@ -26,8 +34,14 @@ def on_key_press(event, label):
         speed = 0
         w = 0
 
-    left_speed = 5 * speed - 2 * w
-    right_speed = 5 * speed + 2 * w
+    left_speed = speed
+    right_speed = speed
+    if w > 0:
+        right_speed = speed
+        left_speed = -speed
+    elif w < 0:
+        right_speed = -speed
+        left_speed = speed
     data = {"speeds": (left_speed, right_speed)}
     with connect("ws://192.168.1.254:8002/") as ws:
         ws.send(json.dumps(data))
@@ -42,7 +56,8 @@ print(
 root = tk.Tk()
 root.title("Robot Speed Controller")
 label = tk.Label(
-    root, text="Press 'up' to increase, 'down' to decrease, 'ESC' to exit."
+    root,
+    text="Press:\n'w' to move forward\n's' to move backwards\n'a' to turn left\n'd' to turn right\n'i' to increase speed\n'k' to decrease speed'p' to exit.",
 )
 label.pack(pady=20)
 
