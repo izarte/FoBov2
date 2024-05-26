@@ -10,7 +10,11 @@ from fobo2_env.src.robot_tracker import RobotTracker
 from fobo2_env.src.human import Human
 from fobo2_env.src.robot_fobo import Robot
 from fobo2_env.src.reward_utils import calculate_distance_reward, calculate_pixel_reward
-from fobo2_env.src.utils import get_human_coordinates, get_human_robot_distance, add_noise_to_motors
+from fobo2_env.src.utils import (
+    get_human_coordinates,
+    get_human_robot_distance,
+    add_noise_to_motors,
+)
 from fobo2_env.src.world_generation import World
 
 
@@ -49,7 +53,7 @@ class FoBo2Env(gym.Env):
         self.dtypes = {
             "wheels_speed": np.float32,
             "human_pixel": np.float32,
-            "depth_image": np.uint8,
+            "depth_image": np.float32,
         }
         self.observation_manager = ObservationManager(
             memory=memory, boundings=self.boundings, dtypes=self.dtypes
@@ -123,7 +127,9 @@ class FoBo2Env(gym.Env):
 
         # Spawn human
         self._human = Human(self._client_id)
-        self._human.reset(starting_area=area, obstacles_corners=self._world.obstacles_corners)
+        self._human.reset(
+            starting_area=area, obstacles_corners=self._world.obstacles_corners
+        )
 
         # Spawn robot
         self._robot = Robot(
@@ -145,7 +151,11 @@ class FoBo2Env(gym.Env):
         #     )
 
         # Get human position and orientation to be around human and orientation
-        self._robot.reset_human_based(human_pose=self._human.start_pose, area=area, desired_distance=self.desired_distance)
+        self._robot.reset_human_based(
+            human_pose=self._human.start_pose,
+            area=area,
+            desired_distance=self.desired_distance,
+        )
 
         self._robot_tracker = RobotTracker(
             client_id=self._client_id,
@@ -167,7 +177,6 @@ class FoBo2Env(gym.Env):
         for obstacle in self._world.obstacles_list:
             self.relevant_collisions.append((self._robot.id, obstacle))
 
-
         self.collision_detector = pyb_utils.CollisionDetector(
             client_id=self._client_id, collision_pairs=self.relevant_collisions
         )
@@ -180,7 +189,7 @@ class FoBo2Env(gym.Env):
         p.stepSimulation(physicsClientId=self._client_id)
         self._human_walk()
         action = add_noise_to_motors(action, 1)
-        
+
         scaled_action = self._scale_action(action)
         self._move_robot(scaled_action)
         observation = self._get_observation()
@@ -248,7 +257,9 @@ class FoBo2Env(gym.Env):
         if not self.human_seen and x > -1:
             self.human_seen = True
         speedL, speedR = self._robot.get_motor_speeds()
-        noise_speedL, noise_speedR = add_noise_to_motors((speedL, speedR), self.boundings["wheels_speed"][1])
+        noise_speedL, noise_speedR = add_noise_to_motors(
+            (speedL, speedR), self.boundings["wheels_speed"][1]
+        )
         observations = {}
         obs = {
             "wheels_speed": np.array([noise_speedL, noise_speedR], dtype=np.float32),
