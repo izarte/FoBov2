@@ -102,7 +102,15 @@ def train(mode, save_path, model_type, env_version, model_checkpoint):
         #     vec_env_cls=SubprocVecEnv,
         # )
         kwargs = {"policy": "MultiInputPolicy", "env": env}
-        # kwargs.update(data["Best_trial"]["Params"])
+        kwargs.update(data["Best_trial"]["Params"])
+        policy_kwargs = {
+            "policy_kwargs": {
+                "log_std_init": -3.484081210153903,
+                "normalize_images": False,
+            }
+        }
+        kwargs.update(policy_kwargs)
+        c_kwargs = {"seed": 37}
         # c_kwargs = {
         #     "gamma": 0.98,
         #     "buffer_size": 10000,
@@ -117,18 +125,6 @@ def train(mode, save_path, model_type, env_version, model_checkpoint):
         else:
             model = SAC(**kwargs)
 
-    elif model_type == "a2c":
-        model = A2C(
-            "MultiInputPolicy",
-            vec_env,
-            verbose=1,
-            ent_coef=0.01,
-            n_steps=5,
-            gamma=0.99,
-            seed=37,
-        )
-
-        print(model.policy)
     elif model_type == "ppo":
         try:
             with open("hyperparameters/ppo_hyperparameters.json", "r") as file:
@@ -149,20 +145,22 @@ def train(mode, save_path, model_type, env_version, model_checkpoint):
             vec_env_cls=SubprocVecEnv,
         )
         kwargs = {"policy": "MultiInputPolicy", "env": vec_env}
-        # kwargs.update(data["Best_trial"]["Params"])
-        c_kwargs = {
-            "seed": 37,
-            "n_steps": 8,
-            "batch_size": n_envs * 8,
-            "gae_lambda": 0.9,
-            "gamma": 0.99,
-            "n_epochs": 2,
-            "ent_coef": 0.00429,
-            "learning_rate": 0.001,
-            "clip_range": 0.2,
-            "use_sde": True,
-        }
-        kwargs.update(c_kwargs)
+        policy_kwargs = {"policy_kwargs": {"normalize_images": False}}
+        kwargs.update(policy_kwargs)
+        kwargs.update(data["Best_trial"]["Params"])
+        # c_kwargs = {
+        #     "seed": 37,
+        #     "n_steps": 8,
+        #     "batch_size": n_envs * 8,
+        #     "gae_lambda": 0.9,
+        #     "gamma": 0.99,
+        #     "n_epochs": 2,
+        #     "ent_coef": 0.00429,
+        #     "learning_rate": 0.001,
+        #     "clip_range": 0.2,
+        #     "use_sde": True,
+        # }
+        # kwargs.update(c_kwargs)
         if model_checkpoint is not None:
             print("lodaded model ", model_checkpoint)
             model = PPO.load(model_checkpoint, env=vec_env)

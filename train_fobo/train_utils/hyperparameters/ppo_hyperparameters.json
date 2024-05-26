@@ -1,23 +1,26 @@
 {
-  "Number of finished trials": 4,
+  "Number of finished trials": 100,
   "Best_trial": {
     "Value": "-inf",
     "Params": {
-      "gamma": 0.98,
-      "learning_rate": 0.32914326864659793,
+      "gamma":  0.9,
+      "learning_rate": 7.283120789389373e-05,
       "batch_size": 512,
-      "buffer_size": 100000,
-      "learning_starts": 20000,
-      "train_freq": 4,
-      "tau": 0.02
+      "ent_coef": 1.1869842816790848e-08,
+      "clip_range": 0.1,
+      "n_epochs": 1,
+      "gae_lambda": 0.8,
+      "max_grad_norm": 0.6,
+      "vf_coef": 0.16232758764877553,
+      "n_steps": 128
     },
     "env": {
-      "memory": 6,
-      "rgb_width": 128,
-      "rgb_height": 128,
-      "depth_width": 320,
-      "depth_height": 320
+      "memory": 32,
+      "rgb_width": 192,
+      "rgb_height": 192,
+      "depth_width": 64,
+      "depth_height": 64
     },
-    "n_envs": 12
+    "n_envs": 8
   }
 }

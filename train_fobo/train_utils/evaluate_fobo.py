@@ -45,13 +45,22 @@ parser.add_argument(
 args = parser.parse_args()
 
 
+# env_kwargs = {
+#     "render_mode": args.render_mode,  # Use the command line argument
+#     "memory": 6,
+#     "rgb_width": 128,
+#     "rgb_height": 128,
+#     "depth_width": 320,
+#     "depth_height": 320,
+# }
+
 env_kwargs = {
     "render_mode": args.render_mode,  # Use the command line argument
-    "memory": 6,
-    "rgb_width": 128,
-    "rgb_height": 128,
-    "depth_width": 320,
-    "depth_height": 320,
+    "memory": 4,
+    "rgb_width": 96,
+    "rgb_height": 96,
+    "depth_width": 64,
+    "depth_height": 64,
 }
 
 env = make_vec_env(
@@ -67,7 +76,7 @@ if args.model_name:
     # Check if the specified model file exists in the directory
     model_path = os.path.join(args.model_dir, args.model_name)
     if not os.path.isfile(model_path):
-        print(f"Model file {args.model_name} not found in the directory.")
+        print(f"Model file {args.model_name} not found in the {model_path}.")
         exit(1)
     models = [model_path]
 else:
