@@ -35,7 +35,7 @@ class ObservationManager:
         return obs
 
     def normalize(self, values: list, key: str):
-        if key != "depth_image" and values[0] == -1 and values[1] == -1:
+        if key == "human_pixel" and values[0] == -1 and values[1] == -1:
             return values
         values = (values - self.boundings[key][0]) / (
             self.boundings[key][1] - self.boundings[key][0]
