@@ -53,7 +53,7 @@ pytablewriter==1.2.0
 python-dateutil==2.9.0.post0
 pytz==2024.1
 PyYAML==6.0.1
-requests==2.31.0
+requests==2.32.2
 rich==13.7.1
 rl_zoo3==2.3.0
 sb3_contrib==2.3.0
