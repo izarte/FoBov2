@@ -8,15 +8,24 @@ import asyncio
 import websockets
 import json
 import base64
+from PIL import Image
 
 MEMORY = 6
 RGB_WIDTH = 1024
-MODEL_PATH = "fobo_ppo"
+MODEL_PATH = "fobo_sac"
 
 
 class Inferencer:
     def __init__(self):
-        self.env = gym.make("fobo2_env/FoBo2-v0", render_mode="DIRECT")
+        self.env = gym.make(
+            "fobo2_env/FoBo2-v0",
+            render_mode="DIRECT",
+            memory=MEMORY,
+            rgb_width=96,
+            rgb_height=96,
+            depth_width=64,
+            depth_height=64,
+        )
         self.env.reset()
         self.boundings = {
             "wheels_speed": [-30, 30],
@@ -32,18 +41,30 @@ class Inferencer:
             memory=MEMORY, boundings=self.boundings, dtypes=self.dtypes
         )
         with torch.no_grad():
-            # self.model = SAC.load(MODEL_PATH, env=self.env, device="cpu")
-            self.model = PPO.load(MODEL_PATH)
+            self.model = SAC.load(MODEL_PATH, device="cpu")
+            # self.model = PPO.load(MODEL_PATH)
         self.init_msgs = 0
 
     def deserialize_data(self, data_r):
         data = json.loads(data_r)
+        print(data)
         bytes_data = base64.b64decode(data["depth_image"])
-        data["depth_image"] = np.frombuffer(bytes_data, dtype=float).reshape(1, 8)[0]
+        data["depth_image"] = np.frombuffer(bytes_data, dtype=np.uint8).reshape(
+            180, 240
+        )[0]
+
+        image = Image.fromarray(data["depth_image"])
+        data["depth_image"] = image.resize((64, 64), Image.ANTIALIAS)
+
+        data["depth_image"].reshape()
         bytes_data = base64.b64decode(data["human_pixel"])
-        data["human_pixel"] = np.frombuffer(bytes_data, dtype=float).reshape(1, 2)[0]
+        data["human_pixel"] = np.frombuffer(bytes_data, dtype=np.float32).reshape(1, 2)[
+            0
+        ]
         bytes_data = base64.b64decode(data["wheels_speed"])
-        data["wheels_speed"] = np.frombuffer(bytes_data, dtype=float).reshape(1, 2)[0]
+        data["wheels_speed"] = np.frombuffer(bytes_data, dtype=np.float32).reshape(
+            1, 2
+        )[0]
         return data
 
     async def listen_and_respond(self, uri="ws://192.168.1.254:8002"):

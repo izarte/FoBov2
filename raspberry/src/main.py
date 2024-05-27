@@ -11,7 +11,7 @@ def main():
     print("START MAIN")
     yolo_reader = DataReader(port=8000, label="pixel")
     # print("YOLO WEBSOCKET READY")
-    # # depth_reader = DataReader(port=8001, label="depth")
+    depth_reader = DataReader(port=8001, label="depth")
     # # speeds_reader = DataReader(port=8002, label="speeds")
     # print("DEPTH WEBSOCKET READY")
     motors_control = MotorsControl()
@@ -19,52 +19,39 @@ def main():
     motors_speed = motors_control.move_and_read([0, 0])
     inferencer = LocalInferencer()
     print("waiting for client")
-    # inferencer.wait_to_client()
+    inferencer.wait_to_client()
     print("Client detected")
     init_messages = 0
+    human_pixel = {"x": 0, "y": 0}
     try:
         while True:
             # human_pixel = None
             # Read yolo data
-            # while human_pixel is None:
-            human_pixel = yolo_reader.read_data()
-            print(human_pixel)
-            # if human_pixel is not None:
-            #     print(human_pixel)
-            # # Read depth data
-            # depth_image = depth_reader.read_data()
-            # obs = {
-            #     "human_pixel": np.array(
-            #         [1, 2],
-            #         dtype=np.float64,
-            #     ),
-            #     "depth_image": np.array(
-            #         [
-            #             1,
-            #             0,
-            #             1,
-            #             0,
-            #             1,
-            #             1,
-            #             0,
-            #             0,
-            #         ],
-            #         dtype=np.float64,
-            #     ),
-            #     "wheels_speed": np.array(
-            #         motors_speed,
-            #         dtype=np.float64,
-            #     ),
-            # }
-            # while init_messages < 8:
-            #     init_messages += 1
-            #     inferencer.send_message(obs)
+            # human_pixel = yolo_reader.read_data()
+            # print("pixel: ", human_pixel)
+            # Read depth data
+            depth_image = depth_reader.read_data()
+            print("depth image readed")
+            obs = {
+                "human_pixel": np.array(
+                    [human_pixel["x"], human_pixel["y"]],
+                    dtype=np.float32,
+                ),
+                "depth_image": depth_image,
+                "wheels_speed": np.array(
+                    motors_speed,
+                    dtype=np.float32,
+                ),
+            }
+            while init_messages < 8:
+                init_messages += 1
+                inferencer.send_message(obs)
 
-            # print(f"sending {obs}")
-            # inferencer.send_message(obs)
-            # print("sent")
-            # action = inferencer.read_message()
-            # print("action:", action)
+            print(f"sending {obs}")
+            inferencer.send_message(obs)
+            print("sent")
+            action = inferencer.read_message()
+            print("action:", action)
             # print(depth_image)
             # cv2.imshow(depth_image)
             # cv2.waitKey(1)

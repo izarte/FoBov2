@@ -5,6 +5,7 @@ from websockets.sync.client import connect
 import sys
 import numpy as np
 import ArducamDepthCamera as ac
+# import cv2
 
 
 MAX_DISTANCE = 4
@@ -18,7 +19,7 @@ class ReadDepth:
         if self.cam.start(ac.TOFOutput.DEPTH) != 0:
             print("Failed to start camera")
         self.data = []
-        self.detect_person()
+        self.read_depth()
 
     def __del__(self):
         self.cam.stop()
@@ -29,7 +30,7 @@ class ReadDepth:
             ws.send(self.data)
             ws.close()
 
-    def detect_person(self):
+    def read_depth(self):
         while True:
             frame = self.cam.requestFrame(200)
             if frame is None:
@@ -40,8 +41,9 @@ class ReadDepth:
             depth_buf = np.clip(depth_buf, 0, 255).astype(np.uint8)
             print(depth_buf.shape)
 
+            # cv2.imshow("depth", depth_buf)
+            # cv2.waitKey(1)
             image_bytes = depth_buf.tobytes()
-
             self.data = image_bytes
             self.send_data()
 

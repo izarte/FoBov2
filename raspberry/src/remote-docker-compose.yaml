@@ -6,6 +6,6 @@ services:
       - PYTHONUNBUFFERED=1
     volumes:
       - /home/inigo/fobov2/raspberry/src/inferencer.py:/usr/src/inferencer.py
-      - /home/inigo/fobov2/raspberry/src/fobo_ppo.zip:/usr/src/fobo_ppo.zip
+      - /home/inigo/fobov2/raspberry/src/fobo_sac.zip:/usr/src/fobo_sac.zip
     command: python3 -u /usr/src/inferencer.py
     # command: sleep infinity

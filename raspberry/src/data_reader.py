@@ -30,7 +30,9 @@ class DataReader:
         self.loop.run_forever()
 
     async def handler(self, websocket, path):
-        data = await websocket.recv()
+        data = None
+        while data is None:
+            data = await websocket.recv()
         if self.label == "depth":
             self.data = np.frombuffer(data, dtype=np.uint8).reshape(180, 240)
         else:
@@ -41,6 +43,7 @@ class DataReader:
     def read_data(self) -> any:
         while self.readed:
             if self.readed == 0:
-                self.readed = 1
                 break
+
+        self.readed = 1
         return self.data
