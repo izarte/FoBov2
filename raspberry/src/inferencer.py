@@ -10,7 +10,7 @@ import json
 import base64
 from PIL import Image
 
-MEMORY = 6
+MEMORY = 4
 RGB_WIDTH = 1024
 MODEL_PATH = "fobo_sac"
 
@@ -41,22 +41,20 @@ class Inferencer:
             memory=MEMORY, boundings=self.boundings, dtypes=self.dtypes
         )
         with torch.no_grad():
-            self.model = SAC.load(MODEL_PATH, device="cpu")
+            self.model = SAC.load(MODEL_PATH, env=self.env, device="cpu")
             # self.model = PPO.load(MODEL_PATH)
         self.init_msgs = 0
 
     def deserialize_data(self, data_r):
         data = json.loads(data_r)
-        print(data)
         bytes_data = base64.b64decode(data["depth_image"])
         data["depth_image"] = np.frombuffer(bytes_data, dtype=np.uint8).reshape(
             180, 240
         )[0]
 
         image = Image.fromarray(data["depth_image"])
-        data["depth_image"] = image.resize((64, 64), Image.ANTIALIAS)
+        data["depth_image"] = np.array(image.resize((64, 64), Image.Resampling.LANCZOS))
 
-        data["depth_image"].reshape()
         bytes_data = base64.b64decode(data["human_pixel"])
         data["human_pixel"] = np.frombuffer(bytes_data, dtype=np.float32).reshape(1, 2)[
             0
@@ -71,15 +69,16 @@ class Inferencer:
         async with websockets.connect(uri) as websocket:
             try:
                 while True:
-                    print("waiting for message")
+                    # print("waiting for message")
                     message = await websocket.recv()
                     data = self.deserialize_data(message)
-                    print(f"Received message from server: {data}")
+                    # print(f"Received message from server: {data}")
+                    self.add_observation(data)
                     if self.init_msgs < MEMORY:
                         self.init_msgs += 1
                         continue
-                    self.add_observation(data)
                     action = self.inference()
+                    print(action)
                     await websocket.send(json.dumps({"action": action.tolist()}))
             except websockets.exceptions.ConnectionClosed as e:
                 print(f"Server disconnected: {e}")

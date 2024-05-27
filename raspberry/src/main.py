@@ -27,11 +27,10 @@ def main():
         while True:
             # human_pixel = None
             # Read yolo data
-            # human_pixel = yolo_reader.read_data()
+            human_pixel = yolo_reader.read_data()
             # print("pixel: ", human_pixel)
             # Read depth data
             depth_image = depth_reader.read_data()
-            print("depth image readed")
             obs = {
                 "human_pixel": np.array(
                     [human_pixel["x"], human_pixel["y"]],
@@ -47,18 +46,16 @@ def main():
                 init_messages += 1
                 inferencer.send_message(obs)
 
-            print(f"sending {obs}")
             inferencer.send_message(obs)
-            print("sent")
             action = inferencer.read_message()
             print("action:", action)
-            # print(depth_image)
+            print(depth_image)
             # cv2.imshow(depth_image)
             # cv2.waitKey(1)
             # Read motors speed
             # controller_speeds = speeds_reader.read_data()
             # Move motors
-            # motors_speed = motors_control.move_and_read(action)
+            motors_speed = motors_control.move_and_read(action)
             # print("motors speed:", motors_speed)
             # Process to get motors speed
 
