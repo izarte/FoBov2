@@ -39,7 +39,7 @@ def main():
             # human_pixel = None
             # Read yolo data
             human_pixel = yolo_reader.read_data()
-            # print("pixel: ", human_pixel)
+            print("pixel: ", human_pixel)
             # Read depth data
             human_pixel = yolo_reader.read_data()
             print("pixel: ", human_pixel)
@@ -79,5 +79,4 @@ def main():
 
 
 if __name__ == "__main__":
-    print("prev func main")
     main()

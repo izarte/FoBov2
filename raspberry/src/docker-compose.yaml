@@ -29,7 +29,22 @@ services:
     - /dev/bus/usb:/dev/bus/usb
     - /home/ubuntu/src/raspberry/src/object-tracker-mobile-net:/usr/src/object-tracker-mobile-net
     privileged: true
-    command: python3 /usr/src/read_yolo.py
+    # command: sleep infinity
+    command: python3 /usr/src/object-tracker-mobile-net/read_mobile_net.py
+    # command: python3 /usr/src/object-tracker-mobile-net/detect.py --tracker sort --videosrc /dev/video1 --labels /usr/src/requirements_for_sort_tracker.txt --model /usr/src/mobilenet_ssd_v2_coco_quant_postprocess_edgetpu.tflite
+
+  # yolo-coral:
+  #   depends_on:
+  #     - main
+  #   image: inigo183/yolo-coral:latest
+  #   environment:
+  #     - PYTHONUNBUFFERED=1
+  #   volumes:
+  #     - /dev/bus/usb:/dev/bus/usb
+  #     - /home/ubuntu/src/raspberry/src/read_yolo.py:/usr/src/read_yolo.py
+  #     - /home/ubuntu/src/raspberry/yolov8n_float32_edgetpu.tflite:/usr/src/yolov8n_float32_edgetpu.tflite
+  #   privileged: true
+  #   command: python3 /usr/src/read_yolo.py
 
   depth-arducam:
     depends_on:
