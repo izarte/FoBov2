@@ -1,0 +1,6 @@
+FROM inigo183/train-fobo:latest
+
+RUN python3 -m pip install websockets
+
+WORKDIR /usr/src/
+COPY ./src/local_inferencerer.py local_inferencerer.py

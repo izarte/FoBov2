@@ -1,0 +1,18 @@
+INFO:root:  Value: -inf
+INFO:root:  Params:
+INFO:root:    batch_size: 512
+INFO:root:    n_steps: 128
+INFO:root:    gamma: 0.9
+INFO:root:    learning_rate: 7.283120789389373e-05
+INFO:root:    ent_coef: 1.1869842816790848e-08
+INFO:root:    clip_range: 0.1
+INFO:root:    n_epochs: 1
+INFO:root:    gae_lambda: 0.8
+INFO:root:    max_grad_norm: 0.6
+INFO:root:    vf_coef: 0.16232758764877553
+INFO:root:    net_arch: medium
+INFO:root:    activation_fn: tanh
+INFO:root:    memory: 32
+INFO:root:    rgb_size: 192
+INFO:root:    depth_size: 64
+INFO:root:    n_envs: 8

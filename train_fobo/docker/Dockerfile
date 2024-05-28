@@ -9,5 +9,5 @@ COPY ./requirements.txt .
 RUN python3 -m pip install -r requirements.txt
 COPY ./fobo2_env fobo2_env
 RUN python3 -m pip install -e fobo2_env
-COPY ./train_fobo.py .
+COPY ./train_utils/train_fobo.py .
 CMD [ "python3", "train_fobo.py" ]

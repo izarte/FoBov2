@@ -4,7 +4,7 @@ services:
     container_name: main-pipeline
     environment:
       - DISPLAY
-      # - PYTHONUNBUFFERED=1
+      - PYTHONUNBUFFERED=1
     devices:
       - /dev/serial0:/dev/serial0
     ports:
@@ -18,24 +18,41 @@ services:
   # mobile-net-coral:
   #   depends_on:
   #     - main
-  #   image: inigo183/mobile-net-coral:latest
+  #   image: inigo183/mobile-net-std-coral:latest
   #   container_name: mobile-net-coral
   #   environment:
   #     - PYTHONUNBUFFERED=1
+  #   # devices:
+  #   #   - /dev/video1:/dev/video/1
+  #   #   - /dev/bus/usb/002/003:/dev/bus/usb/002/003
   #   volumes:
   #   - /dev/bus/usb:/dev/bus/usb
   #   - /home/ubuntu/src/raspberry/src/object-tracker-mobile-net:/usr/src/object-tracker-mobile-net
   #   privileged: true
   #   # command: sleep infinity
   #   command: python3 /usr/src/object-tracker-mobile-net/read_mobile_net.py
-  # depth-arducam:
-  #   depends_on:
-  #     - main
-  #   image: inigo183/tof-camera:latest
-  #   container_name: depth-arducam
-  #   volumes:
-  #     - /home/ubuntu/src/raspberry/src/read_depth.py:/usr/local/read_depth.py 
-  #   devices:
-  #     - /dev/video0:/dev/video0
-  #   privileged: true
-  #   command: python3 /usr/local/read_depth.py 
+
+  yolo-coral:
+    depends_on:
+      - main
+    image: inigo183/yolo-coral:latest
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - /dev/bus/usb:/dev/bus/usb
+      - /home/ubuntu/src/raspberry/src/read_yolo.py:/usr/src/read_yolo.py
+      - /home/ubuntu/src/raspberry/yolov8n_float32_edgetpu.tflite:/usr/src/yolov8n_float32_edgetpu.tflite
+    privileged: true
+    command: python3 /usr/src/read_yolo.py
+
+  depth-arducam:
+    depends_on:
+      - main
+    image: inigo183/tof-camera:latest
+    container_name: depth-arducam
+    volumes:
+      - /home/ubuntu/src/raspberry/src/read_depth.py:/usr/local/read_depth.py 
+    devices:
+      - /dev/video0:/dev/video0
+    privileged: true
+    command: python3 /usr/local/read_depth.py 

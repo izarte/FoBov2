@@ -1,0 +1,11 @@
+services:
+  main:
+    image: inigo183/remote-inference:latest
+    container_name: remote-inference
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - /home/inigo/fobov2/raspberry/src/inferencer.py:/usr/src/inferencer.py
+      - /home/inigo/fobov2/raspberry/src/fobo_sac.zip:/usr/src/fobo_sac.zip
+    command: python3 -u /usr/src/inferencer.py
+    # command: sleep infinity

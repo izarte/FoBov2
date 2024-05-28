@@ -1,53 +1,106 @@
 version: "3.0"
 services:
-  train-fobo-sac:
+  # train-fobo-sac:
+  #   restart: on-failure
+  #   container_name: train-fobo-sac
+  #   image: inigo183/train-fobo:latest
+  #   volumes:
+  #     - /tmp/.X11-unix:/tmp/.X11-unix
+  #     - /home/izarate/datos:/usr/src/data
+  #     - /home/izarate/train_utils/train_fobo.py:/usr/src/train_fobo.py
+  #     - /home/izarate/train_utils/hyperparameters:/usr/src/hyperparameters
+  #     - /home/izarate/fobo2_env:/usr/src/fobo2_env
+  #   environment:
+  #     - TRAIN_MODE=DIRECT
+  #     - SAVE_MODEL_PATH=/usr/src/data
+  #     - MODEL_TYPE=sac
+  #     - USED_GPU=0
+  #     - ENV_VERSION=0.4.3
+  #   privileged: true
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #         - driver: nvidia
+  #           device_ids: ['0', '1', '2']
+  #           capabilities: [gpu]
+  # train-fobo-ppo:
+  #   restart: on-failure
+  #   container_name: train-fobo-ppo
+  #   image: inigo183/train-fobo:latest
+  #   volumes:
+  #     - /tmp/.X11-unix:/tmp/.X11-unix
+  #     - /home/izarate/datos:/usr/src/data
+  #     - /home/izarate/train_utils/train_fobo.py:/usr/src/train_fobo.py
+  #     - /home/izarate/train_utils/hyperparameters:/usr/src/hyperparameters
+  #     - /home/izarate/fobo2_env:/usr/src/fobo2_env
+  #   environment:
+  #     - TRAIN_MODE=DIRECT
+  #     - SAVE_MODEL_PATH=/usr/src/data
+  #     - MODEL_TYPE=ppo
+  #     - USED_GPU=1
+  #     - ENV_VERSION=0.4.3
+  #   privileged: true
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #         - driver: nvidia
+  #           device_ids: ['0', '1', '2']
+  #           capabilities: [gpu]
+
+  evaluate-fobo-sac:
     restart: on-failure
-    container_name: train-fobo-sac
+    container_name: evaluate-fobo-sac
     image: inigo183/train-fobo:latest
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
       - /home/izarate/datos:/usr/src/data
-      - /home/izarate/train_utils/train_fobo.py:/usr/src/train_fobo.py
-      - /home/izarate/train_utils/hyperparameters:/usr/src/hyperparameters
+      - /home/izarate/train_utils/evaluate_fobo.py:/usr/src/evaluate_fobo.py
       - /home/izarate/fobo2_env:/usr/src/fobo2_env
     environment:
       - TRAIN_MODE=DIRECT
       - SAVE_MODEL_PATH=/usr/src/data
       - MODEL_TYPE=sac
       - USED_GPU=0
-      - ENV_VERSION=0.4.1
+      - ENV_VERSION=0.4.3
     privileged: true
     deploy:
       resources:
         reservations:
           devices:
           - driver: nvidia
-            device_ids: ['0', '1', '2', '3']
+            device_ids: ['0', '1', '2']
             capabilities: [gpu]
-  train-fobo-ppo:
+    command: python3 /usr/src/evaluate_fobo.py -d /usr/src/data/fobo_0.4.3_sac_0/checkpoints -gm
+  evaluate-fobo-ppo:
     restart: on-failure
-    container_name: train-fobo-ppo
+    container_name: evaluate-fobo-ppo
     image: inigo183/train-fobo:latest
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
       - /home/izarate/datos:/usr/src/data
-      - /home/izarate/train_utils/train_fobo.py:/usr/src/train_fobo.py
-      - /home/izarate/train_utils/hyperparameters:/usr/src/hyperparameters
+      - /home/izarate/train_utils/evaluate_fobo.py:/usr/src/evaluate_fobo.py
       - /home/izarate/fobo2_env:/usr/src/fobo2_env
     environment:
       - TRAIN_MODE=DIRECT
       - SAVE_MODEL_PATH=/usr/src/data
-      - MODEL_TYPE=ppo
-      - USED_GPU=2
-      - ENV_VERSION=0.4.1
+      - MODEL_TYPE=sac
+      - USED_GPU=1
+      - ENV_VERSION=0.4.3
     privileged: true
     deploy:
       resources:
         reservations:
           devices:
           - driver: nvidia
-            device_ids: ['0', '1', '2', '3']
+            device_ids: ['0', '1', '2']
             capabilities: [gpu]
+    command: python3 /usr/src/evaluate_fobo.py -d /usr/src/data/fobo_0.4.3_ppo_0/checkpoints -gm
+
+
+
+
   # train-hyperparameters-fobo:
   #   container_name: train-hyperparameters-fobo
   #   image: inigo183/train-fobo:latest

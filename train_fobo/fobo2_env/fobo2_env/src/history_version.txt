@@ -27,3 +27,5 @@
 0.4.0 -> Correct depth image perception
     -> add noise to both images with stddev = 50, and noise to actions with std = 0.01
 0.4.1 -> no penalty for losing human
+
+0.4.3 -> fix depth image normalization, uint8 mode changed to float32 to avoid data loss
