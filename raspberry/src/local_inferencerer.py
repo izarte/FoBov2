@@ -47,8 +47,9 @@ class LocalInferencer:
     def read_message(self) -> list:
         while not self.message_available:
             if self.message_available:
-                self.message_available = False
-                return self.message_recieved["action"]
+                break
+        self.message_available = False
+        return self.message_recieved["action"]
 
     async def handler(self, websocket, path):
         self.clients.add(websocket)
@@ -56,7 +57,7 @@ class LocalInferencer:
             async for message in websocket:
                 self.message_available = True
                 self.message_recieved = json.loads(message)
-                # print(f"Received message from client: {message}")
+                print(f"Received message from client: {message}")
         except websockets.exceptions.ConnectionClosed:
             print("Client disconnected")
         finally:

@@ -11,7 +11,7 @@ import base64
 from PIL import Image
 import random
 
-MEMORY = 6
+MEMORY = 4
 RGB_WIDTH = 1024
 MODEL_PATH = "fobo_sac"
 
@@ -54,16 +54,14 @@ class Inferencer:
 
     def deserialize_data(self, data_r):
         data = json.loads(data_r)
-        print(data)
         bytes_data = base64.b64decode(data["depth_image"])
         data["depth_image"] = np.frombuffer(bytes_data, dtype=np.uint8).reshape(
             180, 240
         )[0]
 
         image = Image.fromarray(data["depth_image"])
-        data["depth_image"] = image.resize((64, 64), Image.ANTIALIAS)
+        data["depth_image"] = np.array(image.resize((64, 64), Image.Resampling.LANCZOS))
 
-        data["depth_image"].reshape()
         bytes_data = base64.b64decode(data["human_pixel"])
         data["human_pixel"] = np.frombuffer(bytes_data, dtype=np.float32).reshape(1, 2)[
             0

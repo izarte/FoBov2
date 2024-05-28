@@ -38,14 +38,13 @@ def main():
         while True:
             # human_pixel = None
             # Read yolo data
-            # human_pixel = yolo_reader.read_data()
+            human_pixel = yolo_reader.read_data()
             # print("pixel: ", human_pixel)
             # Read depth data
             human_pixel = yolo_reader.read_data()
             print("pixel: ", human_pixel)
             # Read depth data
             depth_image = depth_reader.read_data()
-            print("read detph")
             obs = {
                 "human_pixel": np.array(
                     [human_pixel["x"], human_pixel["y"]],
@@ -61,10 +60,9 @@ def main():
                 init_messages += 1
                 inferencer.send_message(obs)
             inferencer.send_message(obs)
-            print("sent")
             action = inferencer.read_message()
             print("action:", action)
-            # print(depth_image)
+            print(depth_image)
             # cv2.imshow(depth_image)
             # cv2.waitKey(1)
             # Read motors speed
