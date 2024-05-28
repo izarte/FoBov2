@@ -3,7 +3,17 @@ from motors_control import MotorsControl
 import sys
 from local_inferencerer import LocalInferencer
 import numpy as np
+import signal
 # import cv2
+
+MAX_SPEED = 20
+
+
+def signal_handler(sig, frame):
+    import sys
+
+    print("Signal received:", sig)
+    sys.exit(0)
 
 
 def main():
@@ -12,11 +22,12 @@ def main():
     yolo_reader = DataReader(port=8000, label="pixel")
     # print("YOLO WEBSOCKET READY")
     depth_reader = DataReader(port=8001, label="depth")
-    # # speeds_reader = DataReader(port=8002, label="speeds")
-    # print("DEPTH WEBSOCKET READY")
+    # # # speeds_reader = DataReader(port=8002, label="speeds")
+    # # print("DEPTH WEBSOCKET READY")
     motors_control = MotorsControl()
-    # print("MAIN READY")
+    # # print("MAIN READY")
     motors_speed = motors_control.move_and_read([0, 0])
+    signal.signal(signal.SIGTERM, signal_handler)
     inferencer = LocalInferencer()
     print("waiting for client")
     inferencer.wait_to_client()
@@ -30,8 +41,11 @@ def main():
             # human_pixel = yolo_reader.read_data()
             # print("pixel: ", human_pixel)
             # Read depth data
+            human_pixel = yolo_reader.read_data()
+            print("pixel: ", human_pixel)
+            # Read depth data
             depth_image = depth_reader.read_data()
-            print("depth image readed")
+            print("read detph")
             obs = {
                 "human_pixel": np.array(
                     [human_pixel["x"], human_pixel["y"]],
@@ -43,11 +57,9 @@ def main():
                     dtype=np.float32,
                 ),
             }
-            while init_messages < 8:
+            while init_messages < 4:
                 init_messages += 1
                 inferencer.send_message(obs)
-
-            print(f"sending {obs}")
             inferencer.send_message(obs)
             print("sent")
             action = inferencer.read_message()
@@ -57,10 +69,11 @@ def main():
             # cv2.waitKey(1)
             # Read motors speed
             # controller_speeds = speeds_reader.read_data()
+            # Scale action
+            action = np.array(action) * MAX_SPEED
             # Move motors
-            # motors_speed = motors_control.move_and_read(action)
+            motors_speed = motors_control.move_and_read(action)
             # print("motors speed:", motors_speed)
-            # Process to get motors speed
 
     except KeyboardInterrupt:
         print("Ctrl-C pressed!")
