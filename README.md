@@ -6,6 +6,11 @@ This version has one fixed ToF camera (RGBD), with it, the following person is d
 
 ![robot]
 
+Train simulation video can be found in this link <a href="https://youtu.be/na0y2CK5VwM" target="_blank">demo</a>. The real application can be seen in this video <a href="https://youtu.be/sEIGYYCS6TI" target="_blank">real-demo</a>
+
+
+
+
 ## Reinforcement learning
 The environment is defined in [Gymnasium] integrated with the physics simulator [PyBullet]. The reinforcement learning algorithms used are SAC (Soft Actor-Critic) and PPO (Proximal Policy Optimization) giving better results with SAC.
 
