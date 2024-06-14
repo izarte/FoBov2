@@ -31,7 +31,10 @@ class ReadDepth:
             ws.close()
 
     def read_depth(self):
+        import time
+
         while True:
+            time.sleep(0.2)
             frame = self.cam.requestFrame(200)
             if frame is None:
                 return
@@ -39,8 +42,6 @@ class ReadDepth:
             self.cam.releaseFrame(frame)
             depth_buf = (1 - (depth_buf / MAX_DISTANCE)) * 255
             depth_buf = np.clip(depth_buf, 0, 255).astype(np.uint8)
-            print(depth_buf.shape)
-
             # cv2.imshow("depth", depth_buf)
             # cv2.waitKey(1)
             image_bytes = depth_buf.tobytes()

@@ -9,10 +9,16 @@ import websockets
 import json
 import base64
 from PIL import Image
+import random
 
 MEMORY = 4
 RGB_WIDTH = 1024
 MODEL_PATH = "fobo_sac"
+
+
+class FakeModel:
+    def predict(self, obs, deterministic):
+        return np.array([random.uniform(-0.5, 0.5) for _ in range(2)]), "t"
 
 
 class Inferencer:
@@ -40,9 +46,10 @@ class Inferencer:
         self.observation_manager = ObservationManager(
             memory=MEMORY, boundings=self.boundings, dtypes=self.dtypes
         )
-        with torch.no_grad():
-            self.model = SAC.load(MODEL_PATH, env=self.env, device="cpu")
-            # self.model = PPO.load(MODEL_PATH)
+        self.model = FakeModel()
+        # with torch.no_grad():
+        #     self.model = SAC.load(MODEL_PATH, env=self.env, device="cpu")
+        #     # self.model = PPO.load(MODEL_PATH)
         self.init_msgs = 0
 
     def deserialize_data(self, data_r):
@@ -66,22 +73,29 @@ class Inferencer:
         return data
 
     async def listen_and_respond(self, uri="ws://192.168.1.254:8002"):
-        async with websockets.connect(uri) as websocket:
+        while True:
             try:
-                while True:
-                    # print("waiting for message")
-                    message = await websocket.recv()
-                    data = self.deserialize_data(message)
-                    # print(f"Received message from server: {data}")
-                    self.add_observation(data)
-                    if self.init_msgs < MEMORY:
-                        self.init_msgs += 1
-                        continue
-                    action = self.inference()
-                    print(action)
-                    await websocket.send(json.dumps({"action": action.tolist()}))
-            except websockets.exceptions.ConnectionClosed as e:
-                print(f"Server disconnected: {e}")
+                async with websockets.connect(uri) as websocket:
+                    try:
+                        while True:
+                            # print("waiting for message")
+                            message = await websocket.recv()
+                            data = self.deserialize_data(message)
+                            # print(f"Received message from server: {data}")
+                            self.add_observation(data)
+                            if self.init_msgs < MEMORY:
+                                self.init_msgs += 1
+                                continue
+                            action = self.inference()
+                            print(action)
+                            await websocket.send(
+                                json.dumps({"action": action.tolist()})
+                            )
+                    except websockets.exceptions.ConnectionClosed as e:
+                        self.init_msgs = 0
+                        print(f"Server disconnected: {e}")
+            except:
+                continue
 
     def add_observation(self, obs: dict):
         self.observation_manager.add(obs)
