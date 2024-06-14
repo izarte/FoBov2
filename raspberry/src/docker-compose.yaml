@@ -27,7 +27,7 @@ services:
     #   - /dev/bus/usb/002/003:/dev/bus/usb/002/003
     volumes:
     - /dev/bus/usb:/dev/bus/usb
-    - /home/ubuntu/src/raspberry/src/object-tracker-mobile-net:/usr/src/object-tracker-mobile-net
+    - /home/ubuntu/src/raspberry/src/object-tracker-mobile-net-fobov2:/usr/src/object-tracker-mobile-net
     privileged: true
     # command: sleep infinity
     command: python3 /usr/src/object-tracker-mobile-net/read_mobile_net.py

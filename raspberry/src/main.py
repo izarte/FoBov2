@@ -9,9 +9,12 @@ import signal
 MAX_SPEED = 20
 
 
-def signal_handler(sig, frame):
+def signal_handler(self, sig, frame):
     import sys
 
+    motors_control = MotorsControl()
+    # # print("MAIN READY")
+    _ = motors_control.move_and_read([0, 0])
     print("Signal received:", sig)
     sys.exit(0)
 
